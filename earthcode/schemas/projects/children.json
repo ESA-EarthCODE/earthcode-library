@@ -1,0 +1,97 @@
+{
+  "title": "Project",
+  "allOf": [
+    {
+      "$ref": "../collection.json"
+    },
+    {
+      "type": "object",
+      "required": [
+        "osc:status",
+        "osc:type",
+        "themes"
+      ],
+      "properties": {
+        "updated": {
+          "$ref": "../osc.json#/definitions/updated"
+        },
+        "osc:type": {
+          "type": "string",
+          "enum": ["project"],
+          "options": {
+            "hidden": true
+          }
+        },
+        "osc:status": {
+          "$ref": "../osc.json#/definitions/osc:status"
+        },
+        "osc:workflows": {
+          "$ref": "../osc.json#/definitions/osc:workflows"
+        },
+        "themes": {
+          "$ref": "../themes.json",
+          "propertyOrder": 9
+        },
+        "contacts": {
+          "options": {
+            "collapsed": true,
+            "disable_collapse": false
+          },
+          "allOf": [
+            {
+              "$ref": "../contacts.json"
+            },
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "title": "Technical Officer",
+                    "required": [
+                      "roles"
+                    ],
+                    "properties": {
+                      "roles": {
+                        "items": {
+                          "enum": [
+                            "technical_officer"
+                          ]
+                        },
+                        "options": {
+                          "hidden": true
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "title": "Project Consortium Member",
+                    "required": [
+                      "roles"
+                    ],
+                    "properties": {
+                      "roles": {
+                        "items": {
+                          "enum": [
+                            "consortium_member"
+                          ]
+                        },
+                        "options": {
+                          "hidden": true
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "title": "Other Contacts"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "$ref": "../catalog.json#/definitions/links_root_parent_child_related_via_other"
+    }
+  ]
+}

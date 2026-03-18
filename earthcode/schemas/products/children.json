@@ -1,0 +1,86 @@
+{
+  "title": "Product",
+  "allOf": [
+    {
+      "$ref": "../collection.json"
+    },
+    {
+      "type": "object",
+      "required": [
+        "osc:project",
+        "osc:status",
+        "osc:type",
+        "themes"
+      ],
+      "properties": {
+        "created": {
+          "$ref": "../osc.json#/definitions/created"
+        },
+        "updated": {
+          "$ref": "../osc.json#/definitions/updated"
+        },
+        "osc:type": {
+          "type": "string",
+          "enum": ["product"],
+          "options": {
+            "hidden": true
+          }
+        },
+        "osc:status": {
+          "$ref": "../osc.json#/definitions/osc:status"
+        },
+        "osc:project": {
+          "$ref": "../osc.json#/definitions/osc:project"
+        },
+        "osc:region": {
+          "$ref": "../osc.json#/definitions/osc:region"
+        },
+        "osc:variables": {
+          "$ref": "../osc.json#/definitions/osc:variables",
+          "propertyOrder": 6
+        },
+        "osc:missions": {
+          "$ref": "../osc.json#/definitions/osc:missions",
+          "propertyOrder": 8
+        },
+        "osc:experiment": {
+          "$ref": "../osc.json#/definitions/osc:experiment"
+        },
+        "themes": {
+          "$ref": "../themes.json",
+          "propertyOrder": 9
+        },
+        "cf:parameter": {
+          "type": "array",
+          "format": "cf-parameters",
+          "title": "CF Parameter",
+          "description": "Following the <a href='http://cfconventions.org/cf-conventions/cf-conventions.html#_description_of_the_data'>Climate and Forecast (CF) Metadata Conventions</a>",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "title": "Parameter",
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "title": "Name",
+                "type": "string",
+                "minLength": 1
+              },
+              "unit": {
+                "title": "Unit",
+                "type": "string"
+              }
+            }
+          },
+          "propertyOrder": 7
+        }
+      }
+    },
+    {
+      "$ref": "../catalog.json#/definitions/links_root_parent_child_related_via_other"
+    }
+  ]
+}

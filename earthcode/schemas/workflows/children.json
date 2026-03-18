@@ -1,0 +1,30 @@
+{
+  "title": "Workflow",
+  "allOf": [
+    {
+      "$ref": "../records.json"
+    },
+    {
+      "type": "object",
+      "required": [
+        "properties"
+      ],
+      "properties": {
+        "properties": {
+          "type": "object",
+          "required": [
+            "osc:project"
+          ],
+          "properties": {
+            "osc:project": {
+              "$ref": "../osc.json#/definitions/osc:project"
+            }
+          }
+        }
+      }
+    },
+    {
+      "$ref": "../catalog.json#/definitions/links_root_parent_child_2related_via_other"
+    }
+  ]
+}

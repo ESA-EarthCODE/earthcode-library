@@ -1,0 +1,22 @@
+{
+  "title": "Variable",
+  "allOf": [
+    {
+      "$ref": "../catalog.json"
+    },
+    {
+      "$ref": "../catalog.json#/definitions/links_root_parent_child_related_via_other"
+    },
+    {
+      "required": [
+        "themes"
+      ],
+      "properties": {
+        "themes": {
+          "$ref": "../themes.json",
+          "propertyOrder": 9
+        }
+      }
+    }
+  ]
+}

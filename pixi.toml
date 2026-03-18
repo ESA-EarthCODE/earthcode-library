@@ -1,0 +1,29 @@
+[workspace]
+authors = ["Krasen Samardzhiev <krasensam@gmail.com>"]
+channels = ["conda-forge"]
+name = "earthcode"
+platforms = ["linux-64", "win-64", "osx-arm64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+jupyterlab = ">=4.5.0,<5"
+pystac = ">=1.14.1,<2"
+xarray = ">=2025.12.0,<2026"
+shapely = ">=2.1.2,<3"
+xstac = ">=1.2.0,<2"
+zarr = ">=3.1.5,<4"
+dask = ">=2025.12.0,<2026"
+netcdf4 = ">=1.7.3,<2"
+bottleneck = ">=1.6.0,<2"
+rioxarray = ">=0.20.0,<0.21"
+pytest = ">=9.0.2,<10"
+geopandas = ">=1.1.2,<2"
+pyarrow = ">=23.0.0,<24"
+lancedb = ">=0.21.1,<0.22"
+pillow = ">=10.3,<12"
+
+[pypi-dependencies]
+earthcode = { path = ".", editable = true }
+fastembed = ">=0.7.4, <0.8"

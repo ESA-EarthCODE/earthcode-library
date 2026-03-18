@@ -1,0 +1,559 @@
+{
+  "title": "EOEPCA metadata profile",
+  "type": "object",
+  "required": [
+    "id",
+    "type",
+    "geometry",
+    "properties"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "A unique identifier of the catalog record.",
+      "options": {
+        "hidden": true
+      }
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "Feature"
+      ],
+      "options": {
+        "hidden": true
+      }
+    },
+    "time": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "date": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "timestamp": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$"
+            },
+            "interval": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$"
+                  },
+                  {
+                    "type": "string",
+                    "enum": [
+                      ".."
+                    ]
+                  }
+                ]
+              }
+            },
+            "resolution": {
+              "type": "string",
+              "description": "Minimum time period resolvable in the dataset, as an ISO 8601 duration"
+            }
+          }
+        }
+      ],
+      "options": {
+        "hidden": true
+      }
+    },
+    "geometry": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "type",
+                "coordinates"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "Point"
+                  ]
+                },
+                "coordinates": {
+                  "type": "array",
+                  "minItems": 2,
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "type",
+                "coordinates"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "MultiPoint"
+                  ]
+                },
+                "coordinates": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "minItems": 2,
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "type",
+                "coordinates"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "LineString"
+                  ]
+                },
+                "coordinates": {
+                  "type": "array",
+                  "minItems": 2,
+                  "items": {
+                    "type": "array",
+                    "minItems": 2,
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "type",
+                "coordinates"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "MultiLineString"
+                  ]
+                },
+                "coordinates": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "minItems": 2,
+                    "items": {
+                      "type": "array",
+                      "minItems": 2,
+                      "items": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "type",
+                "coordinates"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "Polygon"
+                  ]
+                },
+                "coordinates": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "minItems": 4,
+                    "items": {
+                      "type": "array",
+                      "minItems": 2,
+                      "items": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "type",
+                "coordinates"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "MultiPolygon"
+                  ]
+                },
+                "coordinates": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "array",
+                      "minItems": 4,
+                      "items": {
+                        "type": "array",
+                        "minItems": 2,
+                        "items": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "type",
+                "geometries"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "GeometryCollection"
+                  ]
+                },
+                "geometries": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/properties/geometry/oneOf/1"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "options": {
+        "hidden": true
+      }
+    },
+    "conformsTo": {
+      "title": "Conformance classes",
+      "type": "array",
+      "description": "The extensions/conformance classes used in this record.",
+      "items": {
+        "title": "Conformance class",
+        "type": "string"
+      }
+    },
+    "properties": {
+      "type": "object",
+      "format": "categories",
+      "properties": {
+        "created": {
+          "$ref": "./osc.json#/definitions/created"
+        },
+        "updated": {
+          "$ref": "./osc.json#/definitions/updated"
+        },
+        "type": {
+          "type": "string",
+          "description": "The nature or genre of the resource. The value should be a code, convenient for filtering records. Where available, a link to the canonical URI of the record type resource will be added to the 'links' property.",
+          "enum": [
+            "dataset",
+            "service",
+            "process",
+            "workflow",
+            "experiment"
+          ],
+          "options": {
+            "hidden": true
+          }
+        },
+        "title": {
+          "$ref": "./catalog.json#/definitions/title",
+          "propertyOrder": 1
+        },
+        "description": {
+          "$ref": "./catalog.json#/definitions/description",
+          "propertyOrder": 2
+        },
+        "keywords": {
+          "$ref": "./collection.json#/definitions/keywords",
+          "propertyOrder": 11
+        },
+        "themes": {
+          "$ref": "./themes.json",
+          "propertyOrder": 9
+        },
+        "language": {
+          "description": "The language used for textual values in this record representation.",
+          "$ref": "#/properties/properties/properties/languages/items",
+          "options": {
+            "hidden": true
+          }
+        },
+        "languages": {
+          "type": "array",
+          "description": "This list of languages in which this record is available.",
+          "items": {
+            "type": "object",
+            "description": "The language used for textual values in this record.",
+            "required": [
+              "code"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "The language tag as per RFC-5646."
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The untranslated name of the language."
+              },
+              "alternate": {
+                "type": "string",
+                "description": "The name of the language in another well-understood language, usually English."
+              },
+              "dir": {
+                "type": "string",
+                "description": "The direction for text in this language. The default, `ltr` (left-to-right), represents the most common situation. However, care should be taken to set the value of `dir` appropriately if the language direction is not `ltr`. Other values supported are `rtl` (right-to-left), `ttb` (top-to-bottom), and `btt` (bottom-to-top).",
+                "enum": [
+                  "ltr",
+                  "rtl",
+                  "ttb",
+                  "btt"
+                ],
+                "default": "ltr"
+              }
+            }
+          },
+          "options": {
+            "hidden": true
+          }
+        },
+        "resourceLanguages": {
+          "type": "array",
+          "description": "The list of languages in which the resource described by this record is available.",
+          "items": {
+            "$ref": "#/properties/properties/properties/languages/items"
+          },
+          "options": {
+            "hidden": true
+          }
+        },
+        "externalIds": {
+          "title": "External IDs",
+          "type": "array",
+          "description": "An identifier for the resource assigned by an external (to the catalog) entity.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "scheme": {
+                "title": "Scheme",
+                "type": "string",
+                "description": "A reference to an authority or identifier for a knowledge organization system from which the external identifier was obtained. It is recommended that the identifier be a resolvable URI."
+              },
+              "value": {
+                "title": "Value",
+                "type": "string",
+                "description": "The value of the identifier."
+              }
+            },
+            "required": [
+              "value"
+            ]
+          }
+        },
+        "formats": {
+          "title": "Formats",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "anyOf": [
+              {
+                "required": [
+                  "name"
+                ]
+              },
+              {
+                "required": [
+                  "mediaType"
+                ]
+              }
+            ],
+            "properties": {
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "mediaType": {
+                "title": "Media Type",
+                "type": "string"
+              }
+            }
+          }
+        },
+        "contacts": {
+          "$ref": "contacts.json"
+        },
+        "license": {
+          "$ref": "license.json"
+        },
+        "rights": {
+          "type": "string",
+          "description": "A statement that concerns all rights not addressed by the license such as a copyright statement.",
+          "options": {
+            "hidden": true
+          }
+        }
+      },
+      "options": {
+        "titleHidden": true
+      }
+    },
+    "links": {
+      "title": "Links",
+      "type": "array",
+      "items": {
+        "title": "Link",
+        "type": "object",
+        "required": [
+          "href"
+        ],
+        "properties": {
+          "href": {
+            "type": "string",
+            "format": "uri-reference"
+          }
+        },
+        "allOf": [
+          {
+            "$ref": "#/definitions/baselink"
+          }
+        ]
+      },
+      "options": {
+        "collapsed": true,
+        "disable_collapse": false
+      },
+      "propertyOrder": 10
+    },
+    "linkTemplates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "uriTemplate"
+        ],
+        "properties": {
+          "uriTemplate": {
+            "type": "string",
+            "description": "Supplies a resolvable URI to a remote resource (or resource fragment)."
+          },
+          "varBase": {
+            "type": "string",
+            "description": "The base URI to which the variable name can be appended to retrieve the definition of the variable as a JSON Schema fragment.",
+            "format": "uri"
+          },
+          "variables": {
+            "type": "object",
+            "description": "This object contains one key per substitution variable in the templated URL.  Each key defines the schema of one substitution variable using a JSON Schema fragment and can thus include things like the data type of the variable, enumerations, minimum values, maximum values, etc."
+          }
+        },
+        "allOf": [
+          {
+            "$ref": "#/definitions/baselink"
+          }
+        ]
+      },
+      "options": {
+        "hidden": true
+      }
+    }
+  },
+  "definitions": {
+    "baselink": {
+      "type": "object",
+      "properties": {
+        "rel": {
+          "title": "Relation",
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "title": "Media Type"
+        },
+        "hreflang": {
+          "type": "string",
+          "description": "A hint indicating what the language of the result of dereferencing the link should be.",
+          "options": {
+            "hidden": true
+          }
+        },
+        "title": {
+          "type": "string",
+          "title": "Title"
+        },
+        "length": {
+          "type": "integer",
+          "options": {
+            "hidden": true
+          }
+        },
+        "created": {
+          "type": "string",
+          "description": "Date of creation of the resource pointed to by the link.",
+          "format": "date-time",
+          "options": {
+            "hidden": true
+          }
+        },
+        "updated": {
+          "type": "string",
+          "description": "Most recent date on which the resource pointed to by the link was changed.",
+          "format": "date-time",
+          "options": {
+            "hidden": true
+          }
+        }
+      }
+    }
+  }
+}

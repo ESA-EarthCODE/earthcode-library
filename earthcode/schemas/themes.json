@@ -1,0 +1,107 @@
+{
+  "title": "Themes",
+  "type": "array",
+  "format": "themes",
+  "minItems": 1,
+  "items": {
+    "title": "Theme",
+    "type": "object",
+    "required": [
+      "concepts",
+      "scheme"
+    ],
+    "properties": {
+      "concepts": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": [
+            "id"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": {
+              "type": "string",
+              "minLength": 1
+            },
+            "url": {
+              "type": "string",
+              "format": "uri"
+            }
+          }
+        }
+      },
+      "scheme": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "oneOf": [
+      {
+        "title": "OSC",
+        "type": "object",
+        "format": "osc-themes-concepts",
+        "required": [
+          "scheme"
+        ],
+        "properties": {
+          "concepts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "format": "osc-theme",
+              "properties": {
+                "title": {
+                  "options": {
+                    "hidden": true
+                  }
+                },
+                "description": {
+                  "options": {
+                    "hidden": true
+                  }
+                },
+                "url": {
+                  "options": {
+                    "hidden": true
+                  }
+                }
+              }
+            }
+          },
+          "scheme": {
+            "enum": [
+              "https://github.com/stac-extensions/osc#theme"
+            ],
+            "options": {
+              "hidden": true
+            }
+          }
+        }
+      },
+      {
+        "title": "Other",
+        "not": {
+          "required": [
+            "scheme"
+          ],
+          "properties": {
+            "scheme": {
+              "enum": [
+                "https://github.com/stac-extensions/osc#theme"
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

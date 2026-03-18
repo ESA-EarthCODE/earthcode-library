@@ -1,0 +1,30 @@
+{
+  "title": "Experiment",
+  "allOf": [
+    {
+      "$ref": "../records.json"
+    },
+    {
+      "type": "object",
+      "required": [
+        "properties"
+      ],
+      "properties": {
+        "properties": {
+          "type": "object",
+          "required": [
+            "osc:workflow"
+          ],
+          "properties": {
+            "osc:workflow": {
+              "$ref": "../osc.json#/definitions/osc:workflow"
+            }
+          }
+        }
+      }
+    },
+    {
+      "$ref": "../catalog.json#/definitions/links_root_parent_child_related_via_input_environment_other"
+    }
+  ]
+}

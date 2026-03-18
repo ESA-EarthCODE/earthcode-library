@@ -1,0 +1,159 @@
+{
+  "type": "object",
+  "required": [
+    "stac_version",
+    "id",
+    "type",
+    "title",
+    "description",
+    "license",
+    "extent",
+    "links"
+  ],
+  "properties": {
+    "stac_version": {
+      "$ref": "catalog.json#/definitions/stac_version"
+    },
+    "stac_extensions": {
+      "$ref": "catalog.json#/definitions/stac_extensions"
+    },
+    "id": {
+      "$ref": "catalog.json#/definitions/id"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["Collection"],
+      "options": {
+        "hidden": true
+      }
+    },
+    "title": {
+      "$ref": "catalog.json#/definitions/title"
+    },
+    "description": {
+      "$ref": "catalog.json#/definitions/description"
+    },
+    "keywords": {
+      "$ref": "#/definitions/keywords",
+      "propertyOrder": 11
+    },
+    "license": {
+      "$ref": "license.json"
+    },
+    "extent": {
+      "$ref": "#/definitions/extent",
+      "propertyOrder": 5
+    },
+    "providers": {
+      "$comment": "Currently unused by OSC catalog",
+      "type": "array",
+      "options": {
+        "hidden": true
+      }
+    },
+    "summaries": {
+      "$comment": "Currently unused by OSC catalog",
+      "type": "object",
+      "options": {
+        "hidden": true
+      }
+    },
+    "assets": {
+      "$comment": "Currently unused by OSC catalog",
+      "type": "object",
+      "options": {
+        "hidden": true
+      }
+    },
+    "links": {
+      "$ref": "catalog.json#/definitions/links"
+    }
+  },
+  "definitions": {
+    "keywords": {
+      "title": "Keywords",
+      "type": "array",
+      "items": {
+        "title": "Keyword",
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "extent": {
+      "title": "Extents",
+      "type": "object",
+      "required": [
+        "spatial",
+        "temporal"
+      ],
+      "properties": {
+        "spatial": {
+          "title": "Spatial Extents",
+          "type": "object",
+          "required": [
+            "bbox"
+          ],
+          "properties": {
+            "bbox": {
+              "type": "array",
+              "title": "Bounding Boxes",
+              "format": "bounding-boxes",
+              "items": {
+                "type": "array",
+                "format": "bounding-box",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 4,
+                "maxItems": 4
+              },
+              "minItems": 1,
+              "options": {
+                "map": {
+                  "projection": "EPSG:3857"
+                },
+                "drawtools": {
+                  "projection": "EPSG:4326",
+                  "showEditor": true,
+                  "importFeatures": true
+                }
+              }
+            }
+          }
+        },
+        "temporal": {
+          "title": "Temporal Extents",
+          "type": "object",
+          "format": "temporal-intervals",
+          "required": [
+            "interval"
+          ],
+          "properties": {
+            "interval": {
+              "title": "Interval",
+              "type": "array",
+              "items": {
+                "title": "Date range",
+                "type": "array",
+                "format": "temporal-interval",
+                "items": {
+                  "title": "Date",
+                  "type": [
+                    "string", "null"
+                  ],
+                  "format": "date-time",
+                  "pattern": "(\\+00:00|Z)$"
+                },
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "minItems": 1
+            }
+          }
+        }
+      }
+    }
+  },
+  "format": "categories"
+}
