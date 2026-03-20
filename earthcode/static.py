@@ -1,17 +1,76 @@
+from __future__ import annotations
+
+from datetime import datetime, timezone
+
 import pystac
-from datetime import datetime
+from pystac.extensions.scientific import ScientificExtension
 
-pystac.set_stac_version('1.0.0')
+from earthcode.metadata_input_definitions import (
+    ExperimentMetadata,
+    ItemMetadata,
+    ProductCollectionMetadata,
+    ProjectCollectionMetadata,
+    WorkflowMetadata,
+)
+
+OSC_SCHEMA_URI = "https://stac-extensions.github.io/osc/v1.0.0/schema.json"
+THEMES_SCHEMA_URI = "https://stac-extensions.github.io/themes/v1.0.0/schema.json"
+CONTACTS_SCHEMA_URI = "https://stac-extensions.github.io/contacts/v0.1.1/schema.json"
+CF_SCHEMA_URI = "https://stac-extensions.github.io/cf/v0.2.0/schema.json"
+THEMES_SCHEME_URI = "https://github.com/stac-extensions/osc#theme"
 
 
-def add_themes(collection, themes_to_add):
-    '''Add themes to the collection custom fields and add links to the themes collection.'''
-    
+def _build_extent(bboxes: list[list[float]], start_datetime: datetime, end_datetime: datetime) -> pystac.Extent:
+    """Builds a STAC extent object from bbox coordinates and start/end datetimes."""
+
+    return pystac.Extent(
+        spatial=pystac.SpatialExtent(bboxes),
+        temporal=pystac.TemporalExtent([[start_datetime, end_datetime]]),
+    )
+
+
+def _add_links(collection: pystac.Collection, relations: list[str], targets: list[str], titles: list[str]) -> None:
+    """Adds a batch of links from relation, target, and title lists."""
+
+    links = [pystac.Link(rel=rel, target=target, title=title) for rel, target, title in zip(relations, targets, titles)]
+    collection.add_links(links)
+
+
+def _ensure_extension(collection: pystac.Collection, schema_uri: str) -> None:
+    """Adds a schema URI to collection extensions if it is not already present."""
+
+    if schema_uri not in collection.stac_extensions:
+        collection.stac_extensions.append(schema_uri)
+
+
+def _set_osc_fields(
+    collection: pystac.Collection,
+    *,
+    project: str | None = None,
+    status: str | None = None,
+    region: str | None = None,
+    osc_type: str | None = None,
+) -> None:
+    """Sets OSC core properties on a collection and ensures OSC extension registration."""
+
+    _ensure_extension(collection, OSC_SCHEMA_URI)
+    if project is not None:
+        collection.extra_fields["osc:project"] = project
+    if status is not None:
+        collection.extra_fields["osc:status"] = status
+    if region is not None:
+        collection.extra_fields["osc:region"] = region
+    if osc_type is not None:
+        collection.extra_fields["osc:type"] = osc_type
+
+
+def _apply_themes(collection: pystac.Collection, theme_ids: list[str]) -> None:
+    """Adds theme links and writes themes metadata to a collection."""
+
+    _ensure_extension(collection, THEMES_SCHEMA_URI)
+
     themes_list = []
-    for theme in themes_to_add:
-        
-        # assert theme in allowed_themes
-
+    for theme in theme_ids:
         # add the correct link
         collection.add_link(
             pystac.Link(rel="related", 
@@ -19,7 +78,6 @@ def add_themes(collection, themes_to_add):
                         media_type="application/json",
                         title=f"Theme: {theme.capitalize()}")
         )
-        
         themes_list.append(
             {
                 "scheme": "https://github.com/stac-extensions/osc#theme",
@@ -34,558 +92,478 @@ def add_themes(collection, themes_to_add):
     )
 
 
-def add_links(collection, relations, targets, titles):
+def _apply_missions(collection: pystac.Collection, mission_ids: list[str]) -> None:
+    """Adds mission links and OSC missions metadata to a collection."""
 
-    '''Add links from the collection to outside websites.'''
-    links = []
-    
-    for rel, target, title in zip(relations, targets, titles):
-        links.append(pystac.Link(rel=rel, target=target, title=title)),
-    
-    collection.add_links(links)
+    _ensure_extension(collection, OSC_SCHEMA_URI)
+    for mission in mission_ids:
+        collection.add_link(
+            pystac.Link(
+                rel="related",
+                target=f"../../eo-missions/{mission}/catalog.json",
+                media_type="application/json",
+                title=f"Mission: {mission.capitalize()}",
+            )
+        )
+    collection.extra_fields["osc:missions"] = mission_ids
 
 
-def create_contract(name, roles, emails):
-    '''Create a contact template'''
-    contact =  {
-        "name": name,
-        "roles": [r for r in roles]
-    }
+def _apply_variables(collection: pystac.Collection, variable_ids: list[str]) -> None:
+    """Adds variable links and OSC variables metadata to a collection."""
+
+    _ensure_extension(collection, OSC_SCHEMA_URI)
+    for variable in variable_ids:
+        collection.add_link(
+            pystac.Link(
+                rel="related",
+                target=f"../../variables/{variable}/catalog.json",
+                media_type="application/json",
+                title=f"Variable: {' '.join(segment.capitalize() for segment in variable.split('-'))}",
+            )
+        )
+    collection.extra_fields["osc:variables"] = variable_ids
+
+
+def _create_contact(name: str, roles: list[str], emails: list[str] | None = None) -> dict:
+    """Builds a contacts entry with optional email objects."""
+
+    contact = {"name": name, "roles": [role for role in roles]}
     if emails:
-        contact['emails'] = [{"value":email} for email in emails]
+        contact["emails"] = [{"value": email} for email in emails]
     return contact
 
 
-def add_product_missions(collection, missions_to_add):
-    '''Add missions to the collection custom fields and add links to the missions collection.'''
-    
-    for mission in missions_to_add:
-        
-        # add the correct link
-        collection.add_link(
-            pystac.Link(rel="related", 
-                        target=f'../../eo-missions/{mission}/catalog.json', 
-                        media_type="application/json",
-                        title=f"Mission: {mission.capitalize()}"
-            )
-        )
+def _apply_project_contacts(
+    collection: pystac.Collection, technical_officer_name: str, technical_officer_email: str, consortium_members: list[tuple[str, str]]
+) -> None:
+    """Builds and writes project contacts from technical officer and consortium members."""
 
-    # Add themes to the custom fields
-    collection.extra_fields.update({
-            "osc:missions": missions_to_add
-    }
+    _ensure_extension(collection, CONTACTS_SCHEMA_URI)
+    to_contact = _create_contact(technical_officer_name, ["technical_officer"], [technical_officer_email])
+    consortium_contacts = [_create_contact(name, ["consoritum_member"], [email]) for name, email in consortium_members]
+    collection.extra_fields["contacts"] = [to_contact] + consortium_contacts
+
+
+def _apply_cf_parameters(collection: pystac.Collection, parameter_names: list[str]) -> None:
+    """Writes CF parameter metadata to a collection."""
+
+    _ensure_extension(collection, CF_SCHEMA_URI)
+    collection.extra_fields["cf:parameter"] = [{"name": parameter_name} for parameter_name in parameter_names]
+
+
+def create_project_collection(project_metadata: ProjectCollectionMetadata) -> pystac.Collection:
+    """Creates an OSC project collection from validated metadata inputs."""
+
+    extent = _build_extent(
+        bboxes=project_metadata.project_bbox,
+        start_datetime=project_metadata.project_start_datetime,
+        end_datetime=project_metadata.project_end_datetime,
     )
 
-
-def add_product_variables(collection, variables_to_add):
-    '''Add variables to the collection custom fields and add links to the missions collection.'''
-    
-    for variable in variables_to_add:
-        
-        # add the correct link
-        collection.add_link(
-            pystac.Link(rel="related", 
-                        target=f'../../variables/{variable}/catalog.json', 
-                        media_type="application/json",
-                        title=f"Variable: {' '.join(s.capitalize() for s in variable.split('-')) }")
-        )
-
-    # Add themes to the custom fields
-    collection.extra_fields.update({
-        "osc:variables": variables_to_add
-    })
-
-
-def create_project_collection(project_id, 
-                              project_title,
-                              project_description, 
-                              project_status,
-                              project_license,
-                              extent,
-                              project_themes,
-                              to_name,
-                              to_email,
-                              consortium_members,
-                              website_link,
-                              eo4society_link=None):
-
-    '''Create project collection template from the provided information.'''
-
-    # Create the collection
     collection = pystac.Collection(
-        id=project_id,
-        description=project_description,
+        id=project_metadata.project_id,
+        description=project_metadata.project_description,
         extent=extent,
-        license=project_license,
-        title=project_title,
-        extra_fields = {
-            "osc:status": project_status,
-            "osc:type": "project",
-            "updated": datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
-        },
-        stac_extensions=[
-            "https://stac-extensions.github.io/osc/v1.0.0/schema.json",
-            "https://stac-extensions.github.io/themes/v1.0.0/schema.json",
-            "https://stac-extensions.github.io/contacts/v0.1.1/schema.json"
-        ]
-
+        license=project_metadata.project_license,
+        title=project_metadata.project_title,
     )
 
-    # Add pre-determined links 
-    collection.add_links([
-        pystac.Link(rel="root", target="../../catalog.json", media_type="application/json", title="Open Science Catalog"),
-        pystac.Link(rel="parent", target="../catalog.json", media_type="application/json", title="Projects"),
-    ])
+    common = pystac.CommonMetadata(collection)
+    now = datetime.now(timezone.utc)
+    common.created = now
+    common.updated = now
 
-    # add the website links
-    if eo4society_link is None:
-        add_links(collection, ['via', ], [website_link], ["Website"])
+    _set_osc_fields(collection, status=project_metadata.project_status, osc_type="project")
+
+    collection.add_links(
+        [
+            pystac.Link(rel="root", target="../../catalog.json", media_type="application/json", title="Open Science Catalog"),
+            pystac.Link(rel="parent", target="../catalog.json", media_type="application/json", title="Projects"),
+        ]
+    )
+
+    if project_metadata.eo4society_link is None:
+        _add_links(collection, ["via"], [project_metadata.website_link], ["Website"])
     else:
-        add_links(collection, ['via', 'via'], [website_link, eo4society_link], ["Website", "EO4Society Link"])
-
-    
-    # add the themes
-    add_themes(collection, project_themes)
-
-    # add the contacts
-    to_contact = [(to_name, ['technical_officer'], [to_email])]
-    consortium = [(cm[0], ['consoritum_member'], [cm[1]]) for cm in consortium_members]
-    collection.extra_fields.update({
-
-        "contacts": [create_contract(*info) for info in to_contact + consortium]
-        
-    })
-
-    return collection
-
-
-def manually_add_product_links(collection, 
-                               access_link,
-                               documentation_link=None,
-                               item_link=None):
-     # add extra links
-    add_links(collection, ['via'], [access_link], ['Access'])
-    if documentation_link:
-        add_links(collection,  ['via'], [documentation_link], ['Documentation'])
-    if item_link:
-        add_links(collection,  ['child'], [item_link], ['Data collection'])
-
-
-def create_product_collection(product_id, product_title, product_description, 
-                              product_extent, product_license,
-                              product_keywords, product_status, product_region,
-                              product_themes, product_missions, product_variables,
-                              project_id, project_title,
-                              product_parameters=None, 
-                              product_doi=None):
-    '''Create a product collection template from the provided information.'''
-
-    collection = pystac.Collection(
-            id=product_id,
-            title=product_title,
-            description=product_description,
-            extent=product_extent,
-            license=product_license,
-            keywords=product_keywords,
-            stac_extensions=[
-                "https://stac-extensions.github.io/osc/v1.0.0/schema.json",
-                "https://stac-extensions.github.io/themes/v1.0.0/schema.json",
-                "https://stac-extensions.github.io/cf/v0.2.0/schema.json"
-            ],
+        _add_links(
+            collection,
+            ["via", "via"],
+            [project_metadata.website_link, project_metadata.eo4society_link],
+            ["Website", "EO4Society Link"],
         )
 
-    # Add pre-determined links 
-    collection.add_links([
-        pystac.Link(rel="root", target="../../catalog.json", media_type="application/json", title="Open Science Catalog"),
-        pystac.Link(rel="parent", target="../catalog.json", media_type="application/json", title="Products"),
-        pystac.Link(rel="related", target=f"../../projects/{project_id}/collection.json", media_type="application/json", title=f"Project: {project_title}"),
+    _apply_themes(collection, project_metadata.project_themes)
 
-    ])
+    _apply_project_contacts(
+        technical_officer_name=project_metadata.to_name,
+        technical_officer_email=project_metadata.to_email,
+        collection=collection,
+        consortium_members=project_metadata.consortium_members,
+    )
 
-    # Add extra properties
-    collection.extra_fields.update({
-        "osc:project": project_id,
-        "osc:status": product_status,
-        "osc:region": product_region,
-        "osc:type": "product",
-        "created": datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "updated": datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
-    })
-
-    if product_doi is not None:
-        collection.extra_fields["sci:doi"] = product_doi
-
-
-    if product_parameters:
-        collection.extra_fields["cf:parameter"] = [{"name": p} for p in product_parameters]
-
-    add_themes(collection, product_themes)
-
-    add_product_missions(collection, product_missions)
-
-    add_product_variables(collection, product_variables)
-    
     return collection
 
 
-def create_workflow_collection(workflow_id, workflow_title, 
-                               workflow_description, workflow_license,
-                               workflow_keywords, workflow_formats, workflow_themes,
-                               codeurl, project_id, project_title, workflow_doi=None):
+def manually_add_product_links(collection: pystac.Collection, product_metadata: ProductCollectionMetadata) -> None:
+    """Adds access, documentation, and child data links from product metadata."""
 
-    '''Create a workflow collection template from the provided information.'''
+    if product_metadata.access_link:
+        _add_links(collection, ["via"], [product_metadata.access_link], ["Access"])
+    if product_metadata.documentation_link:
+        _add_links(collection, ["via"], [product_metadata.documentation_link], ["Documentation"])
+    if product_metadata.item_link:
+        _add_links(collection, ["child"], [product_metadata.item_link], [product_metadata.item_title])
+    if product_metadata.license_link and product_metadata.product_license == 'other':
+        _add_links(collection, ["license"], [product_metadata.license_link], ["License"])
+
+
+def create_product_collection(product_metadata: ProductCollectionMetadata) -> pystac.Collection:
+    """Creates an OSC product collection from validated metadata inputs."""
+
+    extent = _build_extent(
+        bboxes=product_metadata.product_bbox,
+        start_datetime=product_metadata.product_start_datetime,
+        end_datetime=product_metadata.product_end_datetime,
+    )
+
+    collection = pystac.Collection(
+        id=product_metadata.product_id,
+        title=product_metadata.product_title,
+        description=product_metadata.product_description,
+        extent=extent,
+        license=product_metadata.product_license,
+        keywords=product_metadata.product_keywords,
+    )
+
+    collection.add_links(
+        [
+            pystac.Link(rel="root", target="../../catalog.json", media_type="application/json", title="Open Science Catalog"),
+            pystac.Link(rel="parent", target="../catalog.json", media_type="application/json", title="Products"),
+            pystac.Link(
+                rel="related",
+                target=f"../../projects/{product_metadata.project_id}/collection.json",
+                media_type="application/json",
+                title=f"Project: {product_metadata.project_title}",
+            ),
+        ]
+    )
+
+    common = pystac.CommonMetadata(collection)
+    now = datetime.now(timezone.utc)
+    common.created = now
+    common.updated = now
+
+    _set_osc_fields(
+        collection,
+        project=product_metadata.project_id,
+        status=product_metadata.product_status,
+        region=product_metadata.product_region,
+        osc_type="product",
+    )
+    _apply_missions(collection, product_metadata.product_missions)
+    _apply_variables(collection, product_metadata.product_variables)
+    _apply_themes(collection, product_metadata.product_themes)
+
+    if product_metadata.product_doi is not None:
+        _ensure_extension(collection, "https://stac-extensions.github.io/scientific/v1.0.0/schema.json")
+        ScientificExtension.ext(collection, add_if_missing=True).doi = product_metadata.product_doi
+
+    if product_metadata.product_parameters:
+        _apply_cf_parameters(collection, product_metadata.product_parameters)
+
+    manually_add_product_links(collection, product_metadata)
+
+    return collection
+
+
+def create_workflow_record(workflow_metadata: WorkflowMetadata) -> dict:
+    """Creates an OSC workflow record dictionary from validated metadata inputs."""
+
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     collection = {
-        'id': workflow_id,
-        'type': 'Feature',
-        'geometry': None,
+        "id": workflow_metadata.workflow_id,
+        "type": "Feature",
+        "geometry": None,
         "conformsTo": ["http://www.opengis.net/spec/ogcapi-records-1/1.0/req/record-core"],
         "properties": {
-            "title": workflow_title,
-            "description": workflow_description,
+            "title": workflow_metadata.workflow_title,
+            "description": workflow_metadata.workflow_description,
             "type": "workflow",
-            "osc:project": project_id,
+            "osc:project": workflow_metadata.project_id,
             "osc:status": "completed",
-            "formats": [{"name": f} for f in workflow_formats],
-            "updated": datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "created": datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "keywords": workflow_keywords,
-            "license": workflow_license,
-            "version": "1"
+            "formats": [{"name": format_name} for format_name in workflow_metadata.workflow_formats],
+            "updated": now,
+            "created": now,
+            "keywords": workflow_metadata.workflow_keywords,
+            "license": workflow_metadata.workflow_license,
+            "version": "1",
+            "themes": [
+                {
+                    "scheme": THEMES_SCHEME_URI,
+                    "concepts": [{"id": theme_id} for theme_id in workflow_metadata.workflow_themes],
+                }
+            ],
         },
         "linkTemplates": [],
         "links": [
-            
-            {
-                "rel": "root",
-                "href": "../../catalog.json",
-                "type": "application/json",
-                "title": "Open Science Catalog"
-            },            
-            {
-                "rel": "parent",
-                "href": "../catalog.json",
-                "type": "application/json",
-                "title": "Workflows"
-            },            
-
+            {"rel": "root", "href": "../../catalog.json", "type": "application/json", "title": "Open Science Catalog"},
+            {"rel": "parent", "href": "../catalog.json", "type": "application/json", "title": "Workflows"},
             {
                 "rel": "related",
-                "href": f"../../projects/{project_id}/collection.json",
+                "href": f"../../projects/{workflow_metadata.project_id}/collection.json",
                 "type": "application/json",
-                "title": f"Project: {project_title}"
+                "title": f"Project: {workflow_metadata.project_title}",
             },
-            {
-                "rel": 'git',
-                "href": codeurl,
-                "type": "application/json",
-                "title": 'Git source repository'
-            }
-            
-        ]
-
+            {"rel": "git", "href": workflow_metadata.codeurl, "type": "application/json", "title": "Git source repository"},
+        ],
     }
 
-    collection['properties']['themes'] = [
-        {
-            "scheme": "https://github.com/stac-extensions/osc#theme",
-            "concepts": [{"id": t} for t in workflow_themes]
-        }
-    ]
+    for theme_id in workflow_metadata.workflow_themes:
+        collection["links"].append(
+            {
+                "rel": "related",
+                "href": f"../../themes/{theme_id}/catalog.json",
+                "type": "application/json",
+                "title": f"Theme: {theme_id.capitalize()}",
+            }
+        )
 
-    for t in workflow_themes:
-        collection['links'].append(
-                {
-                        "rel": 'related',
-                        "href": f"../../{t}/land/catalog.json",
-                        "type": "application/json",
-                        "title": f'Theme: {t.capitalize()}'
-                    }
-    )
-        
-    if workflow_doi:
-        collection['properties']['DOI'] = workflow_doi
-    
+    if workflow_metadata.workflow_doi:
+        collection["properties"]["DOI"] = workflow_metadata.workflow_doi
+
+    if workflow_metadata.workflow_bbox:
+        collection["bbox"] = workflow_metadata.workflow_bbox[0]
+
+    if workflow_metadata.workflow_start_datetime:
+        collection["properties"]["start_datetime"] = workflow_metadata.workflow_start_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    if workflow_metadata.workflow_end_datetime:
+        collection["properties"]["end_datetime"] = workflow_metadata.workflow_end_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
+
     return collection
 
 
-def create_experiment_collection(experiment_id, experiment_title, experiment_description,
-                        experiment_license, experiment_keywords, experiment_formats, 
-                        experiment_themes, experiment_input_parameters_link, experiment_enviroment_link, 
-                        workflow_id, workflow_title, 
-                        product_id, product_title, 
-                        contacts=None):
+def create_experiment_record(experiment_metadata: ExperimentMetadata) -> dict:
+    """Creates an OSC experiment record dictionary from validated metadata inputs."""
 
-    '''Create an experiment record from the provided information.'''
-
-    if contacts is None:
-        contacts =  [
+    contacts_payload = experiment_metadata.contacts
+    if contacts_payload is None:
+        contacts_payload = [
             {
                 "name": "EarthCODE Demo",
                 "organization": "EarthCODE",
-                "links": [
-                    {
-                        "rel": "about",
-                        "type": "text/html",
-                        "href": "https://opensciencedata.esa.int/"
-                    }
-                ],
+                "links": [{"rel": "about", "type": "text/html", "href": "https://opensciencedata.esa.int/"}],
                 "contactInstructions": "Contact via EarthCODE",
-                "roles": ["host"]
+                "roles": ["host"],
             }
         ]
 
-    # Generate timestamps
-    current_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     collection = {
-        "id": experiment_id,
+        "id": experiment_metadata.experiment_id,
         "type": "Feature",
-        "conformsTo": [
-            "http://www.opengis.net/spec/ogcapi-records-1/1.0/req/record-core"
-        ],
+        "conformsTo": ["http://www.opengis.net/spec/ogcapi-records-1/1.0/req/record-core"],
         "geometry": None,
         "properties": {
-            "created": current_time,
-            "updated": current_time,
+            "created": now,
+            "updated": now,
             "type": "experiment",
-            "title": experiment_title,
-            "description": experiment_description,
-            "keywords": experiment_keywords,
-            "contacts": contacts,
+            "title": experiment_metadata.experiment_title,
+            "description": experiment_metadata.experiment_description,
+            "keywords": experiment_metadata.experiment_keywords,
+            "contacts": contacts_payload,
             "themes": [
                 {
-                    "scheme": "https://github.com/stac-extensions/osc#theme",
-                    "concepts": [{"id": t} for t in experiment_themes]
+                    "scheme": THEMES_SCHEME_URI,
+                    "concepts": [{"id": theme_id} for theme_id in experiment_metadata.experiment_themes],
                 }
             ],
-            "formats": [{"name": f} for f in experiment_formats],
-            "license": experiment_license,
-            "osc:workflow": workflow_id,
+            "formats": [{"name": format_name} for format_name in experiment_metadata.experiment_formats],
+            "license": experiment_metadata.experiment_license,
+            "osc:workflow": experiment_metadata.workflow_id,
         },
         "linkTemplates": [],
         "links": [
+            {"rel": "root", "href": "../../catalog.json", "type": "application/json", "title": "Open Science Catalog"},
+            {"rel": "parent", "href": "../catalog.json", "type": "application/json", "title": "Experiments"},
             {
-                "rel": "root",
-                "href": "../../catalog.json",
+                "rel": "related",
+                "href": f"../../products/{experiment_metadata.product_id}/collection.json",
                 "type": "application/json",
-                "title": "Open Science Catalog"
-            },
-            {
-                "rel": "parent",
-                "href": "../catalog.json",
-                "type": "application/json",
-                "title": "Experiments"
+                "title": experiment_metadata.product_title,
             },
             {
                 "rel": "related",
-                "href": f"../../products/{product_id}/collection.json",
+                "href": f"../../workflows/{experiment_metadata.workflow_id}/record.json",
                 "type": "application/json",
-                "title": product_title
-            },
-            {
-            "rel": "related",
-            "href": f"../../workflows/{workflow_id}/record.json",
-            "type": "application/json",
-            "title": f"Workflow: {workflow_title}"
+                "title": f"Workflow: {experiment_metadata.workflow_title}",
             },
             {
                 "rel": "input",
-                "href": f"{experiment_input_parameters_link}",
+                "href": experiment_metadata.experiment_input_parameters_link,
                 "type": "application/yaml",
-                "title": "Input parameters"
+                "title": "Input parameters",
             },
             {
                 "rel": "environment",
-                "href": f"{experiment_enviroment_link}",
+                "href": experiment_metadata.experiment_enviroment_link,
                 "type": "application/yaml",
-                "title": "Execution environment"
-            }
-        ]
+                "title": "Execution environment",
+            },
+        ],
     }
 
-    # Add Theme links
-    for t in experiment_themes:
-        collection['links'].append(
+    for theme_id in experiment_metadata.experiment_themes:
+        collection["links"].append(
             {
                 "rel": "related",
-                "href": f"../../themes/{t}/catalog.json",
+                "href": f"../../themes/{theme_id}/catalog.json",
                 "type": "application/json",
-                "title": f"Theme: {t.capitalize()}"
+                "title": f"Theme: {theme_id.capitalize()}",
             }
         )
+
+    if experiment_metadata.experiment_bbox:
+        collection["bbox"] = experiment_metadata.experiment_bbox[0]
+
+    if experiment_metadata.experiment_start_datetime:
+        collection["properties"]["start_datetime"] = experiment_metadata.experiment_start_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    if experiment_metadata.experiment_end_datetime:
+        collection["properties"]["end_datetime"] = experiment_metadata.experiment_end_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     return collection
 
 
-def generate_OSC_dummy_entries(id_extension='+123'):
+def generate_OSC_dummy_entries(id_extension: str = "+123"):
+    """Generates demo OSC project, product, workflow, and experiment records."""
 
-    # project
     project_id = "4datlantic-ohc" + id_extension
-    project_title = "4DAtlantic-OHC" 
-    project_description = "Given the major role of the ocean in the climate system, it is essential to characterize the temporal and spatial variations of its heat content. The OHC product results from the space geodetic approach also called altimetry-gravimetry approach."
-    project_status = "completed" 
-    project_license = "various" 
-    project_s, project_w, project_n, project_e = -180.0, -90.0, 180.0, 90.0 
-    project_start_year, project_start_month, project_start_day = 2021, 7, 6
-    project_end_year, project_end_month, project_end_day = 2025,6,12
-    website_link = "https://www.4datlantic-ohc.org/"
-    eo4society_link = "https://eo4society.esa.int/projects/4datlantic-ohc/"
-    project_themes = ["oceans"]
-    to_name, to_email = 'Roberto Sabia', 'roberto.sabia@esa.int'
-    consortium_members = [('Magellium', "magellium.fr")]
-    spatial_extent = pystac.SpatialExtent([[project_s, project_w, project_n, project_e]])
-    temporal_extent = pystac.TemporalExtent(
-        [[datetime(project_start_year, project_start_month, project_start_day), 
-        datetime(project_end_year, project_end_month, project_end_day)]])
-    extent = pystac.Extent(spatial=spatial_extent, temporal=temporal_extent)
-    project_collection = create_project_collection(project_id, 
-                                project_title,
-                                project_description, 
-                                project_status,
-                                project_license,
-                                extent,
-                                project_themes,
-                                to_name,
-                                to_email,
-                                consortium_members,
-                                website_link,
-                                eo4society_link=eo4society_link)
-    # product
+    project_title = "4DAtlantic-OHC"
+
+    project_collection = create_project_collection(
+        ProjectCollectionMetadata(
+            project_id=project_id,
+            project_title=project_title,
+            project_description=(
+                "Given the major role of the ocean in the climate system, it is essential to characterize "
+                "the temporal and spatial variations of its heat content."
+            ),
+            project_status="completed",
+            project_license="various",
+            project_bbox=[[-180.0, -90.0, 180.0, 90.0]],
+            project_start_datetime=datetime(2021, 7, 6),
+            project_end_datetime=datetime(2025, 6, 12),
+            project_themes=["oceans"],
+            to_name="Roberto Sabia",
+            to_email="roberto.sabia@esa.int",
+            consortium_members=[("Magellium", "magellium.fr")],
+            website_link="https://www.4datlantic-ohc.org/",
+            eo4society_link="https://eo4society.esa.int/projects/4datlantic-ohc/",
+        )
+    )
+
     product_id = "4d-atlantic-ohc-global" + id_extension
-    product_title = "Global Ocean Heat Content"
-    product_description = "Given the major role of the ocean in the climate system, it is essential to characterize the temporal and spatial variations of its heat content. The OHC product results from the space geodetic approach also called altimetry-gravimetry approach. This dataset contains variables as 3D grids of ocean heat content anomalies at 1x1 resolution and monthly time step. Error variance-covariance matrices of OHC at regional scale and annual resolution are also provided. See Experimental Dataset Description for details: https://www.aviso.altimetry.fr/fileadmin/documents/data/tools/OHC-EEI/OHCATL-DT-035-MAG_EDD_V3.0.pdf. Version V3-0 of Dataset published 2025 in ODATIS-AVISO portal. This dataset has been produced within the framework of the 4DAtlantic-Ocean heat content Project funded by ESA."
-    product_status = "completed"
-    product_license = "various"
-    product_keywords = [ 
-        "ocean",
-        "heat",
-        'content'
-    ] 
-    product_s =  [-180.0]
-    product_w = [-90.0]
-    product_n = [180.0]
-    product_e = [90.0]
-    product_start_year, product_start_month, product_start_day = 2021, 1, 1
-    product_end_year, product_end_month, product_end_day = 2021,12,31
-    product_region = "Global"
-    product_themes = ["oceans"]
-    product_missions = ['in-situ-observations', 'grace']
-    product_variables = ['ocean-heat-budget']
-    product_parameters = ['ocean-heat-budget']
-    spatial_extent = pystac.SpatialExtent([list(data) for data in zip(product_s, product_w, product_n, product_e)])
-    temporal_extent = pystac.TemporalExtent(
-        [[datetime(product_start_year, product_start_month, product_start_day), 
-        datetime(product_end_year, product_end_month, product_end_day)]])
-    product_extent = pystac.Extent(spatial=spatial_extent, temporal=temporal_extent)
-    project_id = project_id
-    project_title = project_title
-    product_collection = create_product_collection(product_id, product_title, product_description, 
-                              product_extent, product_license,
-                              product_keywords, product_status, product_region,
-                              product_themes, product_missions, product_variables,
-                              project_id, project_title, product_parameters=product_parameters)
-    item_link = 'https://s3.waw4-1.cloudferro.com/EarthCODE/Catalogs/4datlantic-ohc/collection.json'
-    access_link = f'https://opensciencedata.esa.int/stac-browser/#/external/{item_link}'
-    documentation_link = 'https://www.aviso.altimetry.fr/fileadmin/documents/data/tools/OHC-EEI/OHCATL-DT-035-MAG_EDD_V3.0.pdf'
-    manually_add_product_links(product_collection, access_link, documentation_link, item_link,)
+    product_collection = create_product_collection(
+        ProductCollectionMetadata(
+            product_id=product_id,
+            product_title="Global Ocean Heat Content",
+            product_description="Given the major role of the ocean in the climate system.",
+            product_bbox=[[-180.0, -90.0, 180.0, 90.0]],
+            product_start_datetime=datetime(2021, 1, 1),
+            product_end_datetime=datetime(2021, 12, 31),
+            product_license="various",
+            product_keywords=["ocean", "heat", "content"],
+            product_status="completed",
+            product_region="Global",
+            product_themes=["oceans"],
+            product_missions=["in-situ-observations", "grace"],
+            product_variables=["ocean-heat-budget"],
+            project_id=project_id,
+            project_title=project_title,
+            product_parameters=["ocean-heat-budget"],
+            access_link="https://opensciencedata.esa.int/stac-browser/#/external/https://s3.waw4-1.cloudferro.com/EarthCODE/Catalogs/4datlantic-ohc/collection.json",
+            documentation_link="https://www.aviso.altimetry.fr/fileadmin/documents/data/tools/OHC-EEI/OHCATL-DT-035-MAG_EDD_V3.0.pdf",
+            item_link="https://s3.waw4-1.cloudferro.com/EarthCODE/Catalogs/4datlantic-ohc/collection.json",
+        )
+    )
 
-    # workflow
-    workflow_id = "4datlantic-wf" + id_extension
-    workflow_title="4D-Atlantic-Workflow"
-    workflow_description="This describes the OHC workflow"
-    workflow_keywords= ["ocean", "heat", 'çontent']
-    workflow_license = 'CC-BY-4.0' 
-    workflow_formats = ['netcdf64']
-    workflow_themes = ['oceans']
-    workflow_contracts_info = [('Magellium', "contact@magellium.fr")]
-    codeurl = 'https://github.com/ESA-EarthCODE/open-science-catalog-metadata'
-    workflow_collection = create_workflow_collection(workflow_id, workflow_title, 
-                               workflow_description, workflow_license,
-                               workflow_keywords, workflow_formats, workflow_themes,
-                               codeurl, project_id, project_title)
-    
-
-    ### experiment
-    # experiment info
-    # Experiment id
-    experiment_id = "4datlantic-experiment" + id_extension
-    experiment_title = "4D-Atlantic-Experiment"
-    experiment_description = "This describes the OHC experiment"
-    experiment_license = "CC-BY-SA-4.0"
-    experiment_keywords = ["ocean", "heat", 'content']
-
-    # Define the input output formats that this experiment works with
-    # i.e. GeoTIFF, Zarr, netCDF, etc
-    experiment_formats = ["GeoTIFF"] 
-
-    # Define themes i.e. land. Pick one or more from:
-    # - atmosphere, cryosphere, land, magnetosphere-ionosphere, oceans, solid-earth.
-    experiment_themes = ["oceans"]
-
-    # link to the specification of the input paramters for the experiment
-    experiment_input_parameters_link = 'https://github.com/deepesdl/cube-gen'
-    # link to the enviroment in which the experiment was performed
-    experiment_enviroment_link  = 'https://github.com/deepesdl/cube-gen'
-
-    ## ID and title of the associated workflow
     workflow_id = "4datlantic-wf" + id_extension
     workflow_title = "4D-Atlantic-Workflow"
-
-    ## ID and title title of the associated product
-    product_id = "4d-atlantic-ohc-global" + id_extension
-    product_title = "Global Ocean Heat Content"
-
-    experiment = create_experiment_collection(
-    experiment_id, experiment_title, experiment_description,
-    experiment_license, experiment_keywords, experiment_formats, 
-    experiment_themes, experiment_input_parameters_link, experiment_enviroment_link, 
-    workflow_id, workflow_title, 
-    product_id, product_title, 
+    workflow_collection = create_workflow_record(
+        WorkflowMetadata(
+            workflow_id=workflow_id,
+            workflow_title=workflow_title,
+            workflow_description="This describes the OHC workflow",
+            workflow_license="CC-BY-4.0",
+            workflow_keywords=["ocean", "heat", "content"],
+            workflow_formats=["netcdf64"],
+            workflow_themes=["oceans"],
+            codeurl="https://github.com/ESA-EarthCODE/open-science-catalog-metadata",
+            project_id=project_id,
+            project_title=project_title,
+        )
     )
-    
+
+    experiment = create_experiment_record(
+        ExperimentMetadata(
+            experiment_id="4datlantic-experiment" + id_extension,
+            experiment_title="4D-Atlantic-Experiment",
+            experiment_description="This describes the OHC experiment",
+            experiment_license="CC-BY-SA-4.0",
+            experiment_keywords=["ocean", "heat", "content"],
+            experiment_formats=["GeoTIFF"],
+            experiment_themes=["oceans"],
+            experiment_input_parameters_link="https://github.com/deepesdl/cube-gen",
+            experiment_enviroment_link="https://github.com/deepesdl/cube-gen",
+            workflow_id=workflow_id,
+            workflow_title=workflow_title,
+            product_id=product_id,
+            product_title="Global Ocean Heat Content",
+        )
+    )
+
     return project_collection, product_collection, workflow_collection, experiment
 
 
-def add_item_link_to_product_collection(product_collection, item_id, item_title):
+def add_item_link_to_product_collection(product_collection: pystac.Collection, item_id: str, item_title: str) -> None:
+    """Adds an item relation link to a product collection."""
 
     product_collection.add_link(
-        pystac.Link(
-            rel='item', target=f'./{item_id}.json', 
-            media_type='application/json', 
-            title=item_title
-        )
+        pystac.Link(rel="item", target=f"./{item_id}.json", media_type="application/json", title=item_title)
     )
 
 
-def create_item(itemid, geometry, data_time, bbox, product_id, 
-                license, description, data_url, data_mime_type, 
-                data_title, extra_fields=None):
-    
+def create_item(item_metadata: ItemMetadata, stac_version='1.0.0') -> pystac.Item:
+    """Creates a STAC item with one data asset and optional extra fields."""
+
     item = pystac.Item(
-        id=itemid,
-        geometry=geometry,
-        datetime=data_time,
-        bbox=bbox,
-        collection=product_id,
-        properties= {
-            "license": license,
-            "description": description,
-        }
+        id=item_metadata.itemid,
+        geometry=item_metadata.geometry,
+        datetime=item_metadata.data_time,
+        bbox=item_metadata.bbox,
+        collection=item_metadata.product_id,
+        properties={
+            "license": item_metadata.license,
+            "description": item_metadata.description,
+        },
     )
 
-    # 3. add an asset (the actual link to the file)
+    extra_fields = {}
+    for key, value in (item_metadata.extra_fields or {}).items():
+        extra_fields[key] = value
+
     item.add_asset(
         key="data",
         asset=pystac.Asset(
-            href=data_url,
-            media_type=data_mime_type,
+            href=item_metadata.data_url,
+            media_type=item_metadata.data_mime_type,
             roles=["data"],
-            title=data_title
-        )
+            title=item_metadata.data_title,
+            extra_fields=extra_fields
+        ),
     )
-
-    for k,v in extra_fields.items():
-        item.extra_fields[k] = v
 
     return item

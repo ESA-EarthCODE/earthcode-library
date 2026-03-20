@@ -1,5 +1,5 @@
 import pystac
-from earthcode.fairtool import analyse_product, ProductAuditResult
+from earthcode.fairtool import analyse_product, ProductAuditResult, generate_example_product_analysis, product_audit_to_fair_dict
 
 
 def test_analyse_product():
@@ -82,3 +82,14 @@ def test_analyse_product():
     result = analyse_product(target_product, seed=123)
 
     assert result == expected_result
+
+
+def test_transform():
+    example = generate_example_product_analysis()
+    res = product_audit_to_fair_dict(example)
+    expected = {'fair:file_access': True,'fair:file_acessible_files_rate': 1.0,'fair:file_cloud_assets_rate': 1.0,
+                'fair:product_approved_data_domain': True,'fair:product_approved_metadata_domain': True,
+                'fair:product_has_documentation': True, 'fair:product_has_doi': True,
+                'fair:product_url_resolves': True, 'fair:workflow_exists': False
+                }
+    assert res == expected

@@ -23,6 +23,8 @@ geopandas = ">=1.1.2,<2"
 pyarrow = ">=23.0.0,<24"
 lancedb = ">=0.21.1,<0.22"
 pillow = ">=10.3,<12"
+pytest-cov = ">=7.0.0,<8"
+papermill = ">=2.7.0,<3"
 
 [pypi-dependencies]
 earthcode = { path = ".", editable = true }

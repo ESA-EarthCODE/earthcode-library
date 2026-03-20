@@ -1,0 +1,10 @@
+
+# pixi environments
+.pixi
+*.egg-info
+*__pycache__*
+*.json
+test*.ipynb
+open-science-catalog-metadata
+htmlcov/
+*.coverage
