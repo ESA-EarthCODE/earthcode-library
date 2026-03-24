@@ -5,7 +5,7 @@ Currently only handles OSC collections/catalogs for 'products', 'variables', 'eo
 It does NOT handle the stac items within collections. In future this can be handled with multiple indexes and tables.
 
 - Build (defaults baked in): `pixi run python generate_embeddings.py`
-- Explicit build: `pixi run python generate_embeddings.py --products-dir open-science-catalog-metadata/products --lance-uri s3://pangeo-test-fires/vector_store_v3/ --browser-out-dir vector_store_browser_v2 --model BAAI/bge-small-en-v1.5`
+- Explicit build: `pixi run python cli/generate_embeddings.py`
 
 
 Returns:
