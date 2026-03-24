@@ -3,6 +3,7 @@ root: README
 parts:
   - caption: Guide
     chapters:
+      - file: guide/0.Prerequisites-EarthCODE-Workspaces
       - file: guide/0.Prerequisites
       - file: guide/1.Project
       - file: guide/2.0.Product
