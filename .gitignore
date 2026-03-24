@@ -9,3 +9,6 @@ open-science-catalog-metadata
 htmlcov/
 *.coverage
 _build/
+dist/
+dev.ipynb
+.github/workflows/publish.yml
