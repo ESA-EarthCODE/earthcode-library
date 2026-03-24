@@ -8,3 +8,4 @@ test*.ipynb
 open-science-catalog-metadata
 htmlcov/
 *.coverage
+_build/

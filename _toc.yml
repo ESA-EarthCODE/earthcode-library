@@ -1,0 +1,20 @@
+format: jb-book
+root: README
+parts:
+  - caption: Guide
+    chapters:
+      - file: guide/0.Prerequisites
+      - file: guide/1.Project
+      - file: guide/2.0.Product
+      - file: guide/2.1.Product_files_PRR
+      - file: guide/2.1.Product_files_self_hosted
+      - file: guide/3.Workflow
+      - file: guide/4.Experiment
+  - caption: Examples
+    chapters:
+      - file: examples/earthcode_publishing_guide
+      - file: examples/earthcode_data_discovery
+      - file: examples/example_create_osc_entries
+      - file: examples/contribute_via_pr_osc
+      - file: examples/contribute_via_osc_editor
+      - file: examples/glambie_notebook_osc

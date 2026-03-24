@@ -9,6 +9,7 @@ platforms = ["linux-64", "win-64", "osx-arm64"]
 version = "0.1.0"
 
 [tasks]
+docs = "jupyter-book build ."
 
 [dependencies]
 python = ">=3.12,<3.14"
@@ -27,6 +28,7 @@ pylance = ">=0.24.0,<0.25"
 pillow = ">=10.3,<12"
 
 [feature.dev.dependencies]
+jupyter-book = ">=1.0.4,<2"
 jupyterlab = ">=4.5.0,<5"
 pytest = ">=9.0.2,<10"
 pytest-cov = ">=7.0.0,<8"

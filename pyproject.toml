@@ -51,10 +51,11 @@ dependencies = [
 Homepage = "https://github.com/ESA-EarthCODE/earthcode-library"
 Repository = "https://github.com/ESA-EarthCODE/earthcode-library"
 Issues = "https://github.com/ESA-EarthCODE/earthcode-library/issues"
-Documentation = "https://github.com/ESA-EarthCODE/earthcode-library/tree/main/guide"
+Documentation = "https://esa-earthcode.github.io/earthcode-library/"
 
 [project.optional-dependencies]
 dev = [
+    "jupyter-book>=1.0.4,<2",
     "jupyterlab>=4.5.0,<5",
     "papermill>=2.7.0,<3",
     "pytest>=9.0.2,<10",
