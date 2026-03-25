@@ -6,6 +6,9 @@ from typing import Any, Mapping
 REMOTE_URL =  'https://esa-earthcode.github.io/open-science-catalog-metadata/'
 
 
+## need to force pystac to respect 1.0.0
+pystac.set_stac_version('1.0.0')
+
 def _add_link_if_missing(stac_obj: pystac.STACObject, link: pystac.Link) -> None:
     """Adds a link only when no existing link has the same rel and href."""
 

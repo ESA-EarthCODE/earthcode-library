@@ -23,7 +23,7 @@ from earthcode.static import (
 expected_project =  {
   "type": "Collection",
   "id": "4datlantic-ohc",
-  "stac_version": "1.1.0",
+  "stac_version": "1.0.0",
   "description": "Given the major role of the ocean in the climate system, it is essential to characterize the temporal and spatial variations of its heat content. The OHC product results from the space geodetic approach also called altimetry-gravimetry approach.",
   "links": [
     {
@@ -128,7 +128,7 @@ expected_project =  {
 expected_product = {
   "type": "Collection",
   "id": "4d-atlantic-ohc-global",
-  "stac_version": "1.1.0",
+  "stac_version": "1.0.0",
   "description": "Given the major role of the ocean in the climate system, it is essential to characterize the temporal and spatial variations of its heat content. The OHC product results from the space geodetic approach also called altimetry-gravimetry approach. This dataset contains variables as 3D grids of ocean heat content anomalies at 1x1 resolution and monthly time step. Error variance-covariance matrices of OHC at regional scale and annual resolution are also provided. See Experimental Dataset Description for details: https://www.aviso.altimetry.fr/fileadmin/documents/data/tools/OHC-EEI/OHCATL-DT-035-MAG_EDD_V3.0.pdf. Version V3-0 of Dataset published 2025 in ODATIS-AVISO portal. This dataset has been produced within the framework of the 4DAtlantic-Ocean heat content Project funded by ESA.",
   "links": [
     {
