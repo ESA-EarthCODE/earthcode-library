@@ -19,6 +19,9 @@ CONTACTS_SCHEMA_URI = "https://stac-extensions.github.io/contacts/v0.1.1/schema.
 CF_SCHEMA_URI = "https://stac-extensions.github.io/cf/v0.2.0/schema.json"
 THEMES_SCHEME_URI = "https://github.com/stac-extensions/osc#theme"
 
+## need to force pystac to respect 1.0.0
+pystac.set_stac_version('1.0.0')
+
 
 def _build_extent(bboxes: list[list[float]], start_datetime: datetime, end_datetime: datetime) -> pystac.Extent:
     """Builds a STAC extent object from bbox coordinates and start/end datetimes."""
