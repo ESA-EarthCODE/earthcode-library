@@ -36,5 +36,5 @@ You can run tests through `pixi run pytest`. If running on Windows use ` pixi ru
 # To create a new release and publish it
 
 Update pyproject toml with the version and:
-`git tag -a v1.2.0 -m "Release v1.2.0"`
-`git push origin v1.2.0`
+`git tag -a v1.1.4 -m "Release v1.1.4"`
+`git push origin v1.1.4`
