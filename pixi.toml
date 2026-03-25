@@ -24,8 +24,11 @@ bottleneck = ">=1.6.0,<2"
 rioxarray = ">=0.20.0,<0.21"
 geopandas = ">=1.1.2,<2"
 pyarrow = ">=23.0.0,<24"
-pylance = ">=0.24.0,<0.25"
+pylance = ">=2.0.1,<3"
 pillow = ">=10.3,<12"
+onnxruntime = ">=1.24.1,<2"
+platformdirs = ">=4.5.0,<5"
+tokenizers = ">=0.22.2,<1"
 
 [feature.dev.dependencies]
 jupyter-book = ">=1.0.4,<2"
@@ -40,4 +43,3 @@ default = { features = ["dev"], solve-group = "prod" }
 
 [pypi-dependencies]
 earthcode = { path = ".", editable = true }
-fastembed = ">=0.7.4, <0.8"

@@ -1,20 +1,73 @@
+import os
+from pathlib import Path
+
+import numpy as np
 import pytest
 
+import earthcode.search as search_module
+from cli.generate_embeddings import build_embeddings
 from earthcode.search import search
 
 
+@pytest.fixture(scope="module", autouse=True)
+def shared_model_runtime(tmp_path_factory):
+    cache_root = tmp_path_factory.mktemp("model-cache")
+    previous_source = os.environ.pop("EARTHCODE_MODEL_SOURCE", None)
+    previous_file = os.environ.pop("EARTHCODE_MODEL_FILE", None)
+    previous_cache = os.environ.get("EARTHCODE_MODEL_CACHE_DIR")
+    os.environ["EARTHCODE_MODEL_CACHE_DIR"] = str(cache_root)
+    search_module._embedding_runtime.clear()
+    search_module._ds = None
+    yield
+    if previous_source is not None:
+        os.environ["EARTHCODE_MODEL_SOURCE"] = previous_source
+    if previous_file is not None:
+        os.environ["EARTHCODE_MODEL_FILE"] = previous_file
+    if previous_cache is not None:
+        os.environ["EARTHCODE_MODEL_CACHE_DIR"] = previous_cache
+    else:
+        os.environ.pop("EARTHCODE_MODEL_CACHE_DIR", None)
+    search_module._embedding_runtime.clear()
+    search_module._ds = None
+
+
+def test_mean_pool_and_normalize():
+    hidden = np.asarray([[[1.0, 0.0], [3.0, 4.0], [10.0, 10.0]]], dtype=np.float32)
+    mask = np.asarray([[1, 1, 0]], dtype=np.int64)
+
+    pooled = search_module._mean_pool(hidden, mask)
+    normalized = search_module._l2_normalize(pooled)
+
+    expected = np.asarray([[2.0, 2.0]], dtype=np.float32)
+    np.testing.assert_allclose(pooled, expected)
+    np.testing.assert_allclose(
+        normalized,
+        expected / np.linalg.norm(expected, axis=1, keepdims=True),
+    )
+
+
 def test_search_basic():
-    # Test collection ID search
+    vectors = build_embeddings(["forest fires"])
+    assert vectors.shape == (1, 384)
+
     results = search(collection_ids="seasfire-cube", limit=1)
     assert results, "no results returned"
     assert getattr(results[0], "id", None) == "seasfire-cube"
 
-    # Test basic semantic search
     results = search("forest fires", limit=3)
     assert len(results) > 0
     assert all(getattr(r, "id", None) for r in results)
 
-    # Test variable search
+    cache_root = search_module.MODEL_CACHE_DIR
+    env_cache = os.getenv("EARTHCODE_MODEL_CACHE_DIR")
+    if env_cache:
+        cache_root = Path(env_cache)
+    assert cache_root.exists()
+    assert any(cache_root.iterdir())
+    cached_bundle = search_module._get_cached_model_bundle()
+    assert (cached_bundle / search_module.MODEL_FILE).exists()
+    assert (cached_bundle / search_module.TOKENIZER_FILE).exists()
+
     results = search("chlorophyll", type="variables", limit=2)
     assert len(results) > 0
 

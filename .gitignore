@@ -12,3 +12,4 @@ _build/
 dist/
 dev.ipynb
 .github/workflows/publish.yml
+earthcode/models

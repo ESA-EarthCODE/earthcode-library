@@ -15,19 +15,15 @@ Returns:
 import argparse
 import json
 from pathlib import Path
+
 import lance
 import numpy as np
 import pyarrow as pa
-from fastembed import TextEmbedding
+
+from earthcode.search import LANCE_URI, _embed_texts
 
 DEFAULT_ROOT_DIR = "../open-science-catalog-metadata"
 DEFAULT_GROUPS = ["products", "variables", "eo-missions", "projects"]
-DEFAULT_LANCE_URI = "s3://pangeo-test-fires/vector_store_v5/"
-LANCE_BASE_STORAGE_OPTIONS = {
-    "region": "eu-west-2",
-    "aws_skip_signature": "true",
-}  # to be implemented
-MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
 
 # ---------------------------- helpers ---------------------------- #
@@ -101,9 +97,8 @@ def load_documents(stac_dir, group):
     return rows
 
 
-def build_embeddings(texts, model_name):
-    model = TextEmbedding(model_name=model_name)
-    return np.asarray(list(model.embed(texts)), dtype=np.float32)
+def build_embeddings(texts):
+    return _embed_texts(texts)
 
 
 # ----------------------------- main ------------------------------ #
@@ -124,11 +119,8 @@ def main():
     )
     parser.add_argument(
         "--lance-uri",
-        default=DEFAULT_LANCE_URI,
+        default=LANCE_URI,
         help="Where to write the Lance dataset.",
-    )
-    parser.add_argument(
-        "--model", default=MODEL_NAME, help="FastEmbed model name."
     )
     args = parser.parse_args()
 
@@ -138,7 +130,7 @@ def main():
 
     # build embeddings
     texts = [r["text"] for r in rows]
-    embeddings = build_embeddings(texts, args.model)
+    embeddings = build_embeddings(texts)
     embed_array = pa.FixedSizeListArray.from_arrays(
         pa.array(embeddings.astype(np.float32).ravel(), type=pa.float32()),
         embeddings.shape[1],
