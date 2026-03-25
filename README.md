@@ -31,3 +31,10 @@ In the examples folder you can find notebooks that show:
 5. `pixi run jupyter lab`
 
 You can run tests through `pixi run pytest`. If running on Windows use ` pixi run pytest --basetemp=C:\t` to avoid long path errors, since some of the project names are >260 chars.
+
+
+# To create a new release and publish it
+
+Update pyproject toml with the version and:
+`git tag -a v1.2.0 -m "Release v1.2.0"`
+`git push origin v1.2.0`
