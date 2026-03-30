@@ -9,6 +9,7 @@ license-files = ["LICENSE"]
 authors = [
     { name = "Krasen Samardzhiev", email = "krasensam@gmail.com" },
     { name = "Deyan Samardzhiev", email = "dean@lampata.co.uk" },
+    { name = "Claudio Candelori", email = "claudio.candelori@cgi.com"},
 ]
 keywords = [
     "earth observation",
@@ -47,6 +48,7 @@ dependencies = [
     "pydantic>=2.12.5,<3",
     "requests>=2.32.5,<3",
     "tokenizers>=0.22.2,<1",
+    "PyYAML"
 ]
 
 [project.urls]
@@ -73,3 +75,7 @@ exclude = ["earthcode/models/**"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["earthcode"]
+
+[project.scripts]
+earthcode_template_gen = "earthcode.template_generator:main"
+earthcode_stac_gen = "earthcode.stac_generator:main"

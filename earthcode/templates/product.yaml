@@ -1,0 +1,54 @@
+id: cool-project-product                                # This is the unique id of the product. Typically, contains the dataset title+project name (or acronym)
+description: output product results for Cool Project    # Short, but meaningful product description. It should provide enough information to the external users on the specific product.
+title: Cool Project Product                             # Product Title
+license: proprietary                                    # license of the product. Should be one of https://github.com/ESA-EarthCODE/open-science-catalog-validation/blob/main/schemas/license.json
+#license_link:  https://github.com/cool-license         # If the license is not available put license='other' and fill this field with the license link.
+status: completed                                       # Product status
+region: cool-land                                       # Text description of the study area
+project: cool-project                                   # Unique id of the OSC project this product is related to. It must be the id provided in the ./project/<project-id>
+project-title: Cool Project                             # title of the related project
+
+# Define project Themes. The fields are restricted to the themes available in the OCS and having at least one theme is mandatory.
+# Check available themes here: https://opensciencedata.esa.int/themes/catalog and https://github.com/ESA-EarthCODE/open-science-catalog-metadata/main/themes
+themes:
+  - land
+  - oceans
+
+# List of Keywords associated with the product. These are expected to be inline with the description.
+keywords:
+  - agriculture
+  - crops
+
+# Array of Variables related to the product. This array of values is mandatory and limited to variables already existing in the OSC
+# in this list https://github.com/ESA-EarthCODE/open-science-catalog-metadata/tree/main/variables.
+# If you would like to associate your product to a variable that is not on the list, create variable entry first.
+variables:
+  - cool-stuff
+  - cool-things
+
+# Array of CF Parameters: see https://github.com/stac-extensions/cf for more details
+cf_parameters:
+  - cool-stuff
+  - cool-tools
+
+# Array of ESA missions related to the product. This array of values is mandatory and limited to missions already existing in the OSC
+# in this list: https://github.com/ESA-EarthCODE/open-science-catalog-metadata/tree/main/eo-missions.
+# If you would like to associate your product to a mission that is not on the list, create an eo-mission entry first.
+missions:
+  - cool-mission
+  - freezing-mission
+
+# The Temporal and Spatial Extent of the product
+extent:
+  spatial:
+    bbox:
+    - - -180
+      - -90
+      - 180
+      - 90
+  temporal:
+    start: '2021-01-01T00:00:00Z'
+    end: '2021-12-31T23:59:59Z'
+
+# DOI reference
+sci:doi: https://doi.org/10.12345/abc-r4nd0mn

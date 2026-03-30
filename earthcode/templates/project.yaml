@@ -1,0 +1,41 @@
+---
+# Define id, title, description, project status, license
+id: cool-project-id       # This is your project id. Please make sure to use unique id name for your project! The parent folder of the collection.json should have the same name as this id (not displayed in the browser).
+title: CoolProjectTitle   # Title of your project. Official acronym of the project may be used as well (this will be displayed to public)
+description: Brief description of the project
+status: completed         # status of the project - Select from: completed, ongoing, scheduled
+license: proprietary      # Top level license of project outcomes. Should be one of https://github.com/ESA-EarthCODE/open-science-catalog-validation/blob/main/schemas/license.json
+
+# Define spatial and temporal extent: the study area of the project and its planned duration.
+extent:
+  spatial:
+    bbox:
+    - - -180
+      - -90
+      - 180
+      - 90
+  temporal:
+    start: '2021-01-01T00:00:00Z'
+    end: '2021-12-31T23:59:59Z'
+
+# Define links, link relations and link titles. This is a list of links to the project websites. These are mandatory and you have to adapt them to your project.
+link_website: https://cool-project.com
+link_eo4society: https://eo4society.esa.int/projects
+
+# Define project themes. The fields are restricted to the themes available in the OCS and having at least one theme is mandatory. Check available themes here: https://opensciencedata.esa.int/themes/catalog
+themes:
+- land
+- atmosphere
+- cryosphere
+- magnetosphere-ionosphere
+- oceans
+- solid-earth
+
+# Define contacts, list of consortium members working on the project and contact to ESA TO following the project. This field is required.
+to_name: Technical Officer
+to_email: t_o_mail@mail.com
+consortium_members:
+  - name: Consortium Member 1
+    email: cm1@mail.com
+  - name: Consortium Member 2
+    email: cm2@mail.com
