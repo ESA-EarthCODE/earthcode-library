@@ -48,7 +48,7 @@ dependencies = [
     "pydantic>=2.12.5,<3",
     "requests>=2.32.5,<3",
     "tokenizers>=0.22.2,<1",
-    "PyYAML"
+    "PyYAML>=6.0.3",
 ]
 
 [project.urls]
