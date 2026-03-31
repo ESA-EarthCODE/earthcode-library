@@ -25,25 +25,23 @@ jobs:
 
     steps:
       - name: Checkout earthcode-library
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           path: earthcode-library
 
       - name: Checkout open-science-catalog-metadata
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           repository: ESA-EarthCODE/open-science-catalog-metadata
           path: open-science-catalog-metadata
 
-      - name: Set up Pixi
-        uses: prefix-dev/setup-pixi@v0.9.4
-        with:
-          pixi-version: v0.59.0
-          manifest-path: earthcode-library/pixi.toml
-          environments: default
-          locked: true
-          cache: true
-          cache-write: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      - name: Install Pixi
+        run: |
+          curl -fsSL https://pixi.sh/install.sh | sh
+          echo "$HOME/.pixi/bin" >> "$GITHUB_PATH"
+
+      - name: Install dependencies
+        run: pixi install --locked
 
       - name: Run test suite
         run: pixi run -e default pytest
