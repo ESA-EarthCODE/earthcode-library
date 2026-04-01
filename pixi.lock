@@ -4059,7 +4059,7 @@ packages:
 - pypi: ./
   name: earthcode
   version: 0.1.7
-  sha256: 86ade06f59e2da2c6dc7fcaa56947bb5586079cfb6bdd95c8b46791fe5480d20
+  sha256: 334a97b40d7f802bd26f7065e94c887678e16ee20bdb3b8ca51b473f23b85d87
   requires_dist:
   - pystac>=1.14.1,<2
   - xarray>=2025.12.0,<2026

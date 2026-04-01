@@ -72,6 +72,33 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build]
 exclude = ["earthcode/models/**"]
+artifacts = [
+    "earthcode/schemas/catalog.json",
+    "earthcode/schemas/collection.json",
+    "earthcode/schemas/contacts.json",
+    "earthcode/schemas/eo-missions/children.json",
+    "earthcode/schemas/eo-missions/parent.json",
+    "earthcode/schemas/experiments/children.json",
+    "earthcode/schemas/experiments/parent.json",
+    "earthcode/schemas/license.json",
+    "earthcode/schemas/osc.json",
+    "earthcode/schemas/products/children.json",
+    "earthcode/schemas/products/parent.json",
+    "earthcode/schemas/projects/children.json",
+    "earthcode/schemas/projects/parent.json",
+    "earthcode/schemas/records.json",
+    "earthcode/schemas/themes.json",
+    "earthcode/schemas/themes/children.json",
+    "earthcode/schemas/themes/parent.json",
+    "earthcode/schemas/variables/children.json",
+    "earthcode/schemas/variables/parent.json",
+    "earthcode/schemas/workflows/children.json",
+    "earthcode/schemas/workflows/parent.json",
+    "earthcode/generators/templates/experiment.yaml",
+    "earthcode/generators/templates/product.yaml",
+    "earthcode/generators/templates/project.yaml",
+    "earthcode/generators/templates/workflow.yaml",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["earthcode"]

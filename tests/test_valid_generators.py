@@ -147,6 +147,13 @@ def test_generate_template():
         shutil.rmtree(test_dir)
 
 
+def test_packaged_schema_resources_exist():
+    with resources.as_file(
+        resources.files("earthcode").joinpath("schemas").joinpath("catalog.json")
+    ) as schema_path:
+        assert schema_path.is_file()
+
+
 def test_generate_template_with_no_template_selected_logs_warning(caplog):
     test_dir = tempfile.mkdtemp()
     try:
