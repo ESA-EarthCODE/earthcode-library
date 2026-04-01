@@ -11,8 +11,8 @@ formats:                     # format of experiment output
   - PNG
 workflow: cool-project-workflow                   # id of the workflow used for this experiment
 workflow-title: Workflow to analyze Cool Project  # title of the workflow used for this experiment
-product: cool-project-output                      # id of the output product produced by this experiment
-product-title: CoolProjectOutput                  # title of the output product produced by this experiment
+product: cool-project-product                      # id of the output product produced by this experiment
+product-title: Cool Project Product                  # title of the output product produced by this experiment
 
 # Define links, link relations and link titles: e.g. link to service used to run the experiment etc.
 link_env: https://myplatform.com
@@ -31,8 +31,9 @@ contacts:
     - technical_officer
   organization: CGI
   links:
-    - https://www.cgi.com
-    - https://git.com/users/technical-officer
+    - rel: about
+      type: text/html
+      href: https://cgi.com/
   contact_instructions: Contact preferably through project support page
 
 - name: Junior Staff

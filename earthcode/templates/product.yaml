@@ -6,7 +6,7 @@ license: proprietary                                    # license of the product
 status: completed                                       # Product status
 region: cool-land                                       # Text description of the study area
 project: cool-project                                   # Unique id of the OSC project this product is related to. It must be the id provided in the ./project/<project-id>
-project-title: Cool Project                             # title of the related project
+project-title: CoolProjectTitle                             # title of the related project
 
 # Define project Themes. The fields are restricted to the themes available in the OCS and having at least one theme is mandatory.
 # Check available themes here: https://opensciencedata.esa.int/themes/catalog and https://github.com/ESA-EarthCODE/open-science-catalog-metadata/main/themes
@@ -23,20 +23,17 @@ keywords:
 # in this list https://github.com/ESA-EarthCODE/open-science-catalog-metadata/tree/main/variables.
 # If you would like to associate your product to a variable that is not on the list, create variable entry first.
 variables:
-  - cool-stuff
-  - cool-things
+  - lightning
 
 # Array of CF Parameters: see https://github.com/stac-extensions/cf for more details
 cf_parameters:
-  - cool-stuff
-  - cool-tools
+  - lightning
 
 # Array of ESA missions related to the product. This array of values is mandatory and limited to missions already existing in the OSC
 # in this list: https://github.com/ESA-EarthCODE/open-science-catalog-metadata/tree/main/eo-missions.
 # If you would like to associate your product to a mission that is not on the list, create an eo-mission entry first.
 missions:
-  - cool-mission
-  - freezing-mission
+  - sentinel-2
 
 # The Temporal and Spatial Extent of the product
 extent:
@@ -52,3 +49,5 @@ extent:
 
 # DOI reference
 sci:doi: https://doi.org/10.12345/abc-r4nd0mn
+
+via_link: https://myplatform.com/products/cool-project-product
