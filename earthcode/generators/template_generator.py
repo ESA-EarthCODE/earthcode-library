@@ -32,22 +32,22 @@ def generate_template(project=False, workflow=False, experiment=False, product=F
 
     if project:
         log.info("Generating Project template at \""+target+"\"")
-        with resources.as_file(resources.files("earthcode").joinpath("templates").joinpath("project.yaml")) as path:
+        with resources.as_file(resources.files("earthcode.generators").joinpath("templates").joinpath("project.yaml")) as path:
             shutil.copy(path, target)
 
     if workflow:
         log.info("Generating Workflow template at \""+target+"\"")
-        with resources.as_file(resources.files("earthcode").joinpath("templates").joinpath("workflow.yaml")) as path:
+        with resources.as_file(resources.files("earthcode.generators").joinpath("templates").joinpath("workflow.yaml")) as path:
             shutil.copy(path, target)
 
     if experiment:
         log.info("Generating Experiment template at \""+target+"\"")
-        with resources.as_file(resources.files("earthcode").joinpath("templates").joinpath("experiment.yaml")) as path:
+        with resources.as_file(resources.files("earthcode.generators").joinpath("templates").joinpath("experiment.yaml")) as path:
             shutil.copy(path, target)
 
     if product:
         log.info("Generating Product template at \""+target+"\"")
-        with resources.as_file(resources.files("earthcode").joinpath("templates").joinpath("product.yaml")) as path:
+        with resources.as_file(resources.files("earthcode.generators").joinpath("templates").joinpath("product.yaml")) as path:
             shutil.copy(path, target)
 
     if not project and not workflow and not experiment and not product:
