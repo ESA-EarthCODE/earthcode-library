@@ -29,7 +29,7 @@ pillow = ">=10.3,<12"
 onnxruntime = ">=1.24.1,<2"
 platformdirs = ">=4.5.0,<5"
 tokenizers = ">=0.22.2,<1"
-PyYAML = ">=6.0.3"
+PyYAML = ">=6.0.3,<7"
 
 [target.osx-arm64.dependencies]
 python = ">=3.12,<3.14"

@@ -1,18 +1,18 @@
-import os
-import json
+from pathlib import Path
 from datetime import datetime
 import logging
 import sys
 
 import yaml
 
+from earthcode.git_add import save_workflow_record_to_osc
 from earthcode.static import create_workflow_record, WorkflowMetadata
 
 logging.basicConfig(stream=sys.stdout, encoding='utf-8', level=logging.INFO)
 log = logging.getLogger()
 
 
-def create_workflow_stac_from_template(project_yaml, target):
+def create_workflow_stac_from_template(project_yaml, osc_path):
     with open(project_yaml, 'r') as file:
         data = yaml.safe_load(file)
 
@@ -49,6 +49,4 @@ def create_workflow_stac_from_template(project_yaml, target):
 
     workflow_record = create_workflow_record(workflow_metadata)
 
-    # save this file and copy it to the catalog/workflows/{workflow-id}/record.json
-    with open(os.path.join(target, 'workflow_record.json'), 'w') as f:
-        json.dump(workflow_record, f, indent=2)
+    save_workflow_record_to_osc(workflow_record, Path(osc_path))

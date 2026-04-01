@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 from datetime import datetime
 import sys
 import logging
@@ -7,12 +7,14 @@ import pystac
 import yaml
 
 from earthcode.static import create_product_collection, ProductCollectionMetadata
+from earthcode.git_add import save_product_collection_to_catalog
+
 
 logging.basicConfig(stream=sys.stdout, encoding='utf-8', level=logging.INFO)
 log = logging.getLogger()
 
 
-def create_product_stac_from_template(project_yaml, target):
+def create_product_stac_from_template(project_yaml, osc_path):
     with (open(project_yaml, 'r') as file):
         data = yaml.safe_load(file)
 
@@ -56,5 +58,4 @@ def create_product_stac_from_template(project_yaml, target):
 
     product_collection = create_product_collection(product_metadata)
 
-    # save this file and copy it to the catalog/products/{product_id}/collection.json
-    product_collection.save_object(dest_href=os.path.join(target, 'product_collection.json'))
+    save_product_collection_to_catalog(product_collection, Path(osc_path))

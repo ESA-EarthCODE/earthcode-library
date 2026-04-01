@@ -1,5 +1,4 @@
-import os
-import json
+from pathlib import Path
 from datetime import datetime
 import logging
 import sys
@@ -7,12 +6,13 @@ import sys
 import yaml
 
 from earthcode.static import create_experiment_record, ExperimentMetadata
+from earthcode.git_add import save_experiment_record_to_osc
 
 logging.basicConfig(stream=sys.stdout, encoding='utf-8', level=logging.INFO)
 log = logging.getLogger()
 
 
-def create_experiment_stac_from_template(experiment_yaml, target):
+def create_experiment_stac_from_template(experiment_yaml, osc_path):
     with open(experiment_yaml, 'r') as file:
         data = yaml.safe_load(file)
 
@@ -50,6 +50,4 @@ def create_experiment_stac_from_template(experiment_yaml, target):
 
     experiment_record = create_experiment_record(experiment_metadata)
 
-    # save this file and copy it to the catalog/experiments/{experiment-id}/record.json
-    with open(os.path.join(target, 'experiment_record.json'), 'w') as f:
-        json.dump(experiment_record, f, indent=2)
+    save_experiment_record_to_osc(experiment_record, Path(osc_path))

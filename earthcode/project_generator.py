@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 from datetime import datetime
 import logging
 import sys
@@ -7,12 +7,13 @@ import pystac
 import yaml
 
 from earthcode.static import create_project_collection, ProjectCollectionMetadata
+from earthcode.git_add import save_project_collection_to_osc
 
 logging.basicConfig(stream=sys.stdout, encoding='utf-8', level=logging.INFO)
 log = logging.getLogger()
 
 
-def create_project_stac_from_template(project_yaml, target):
+def create_project_stac_from_template(project_yaml, osc_path):
     with open(project_yaml, 'r') as file:
         data = yaml.safe_load(file)
 
@@ -30,8 +31,7 @@ def create_project_stac_from_template(project_yaml, target):
         project_cms = []
         [project_cms.append((member['name'], member['email'])) for member in data['consortium_members']]
 
-    collection = create_project_collection(
-        ProjectCollectionMetadata(
+    project_metadata = ProjectCollectionMetadata(
             project_id=data['id'] ,
             project_title=data['title'],
             project_description=data['description'],
@@ -47,7 +47,6 @@ def create_project_stac_from_template(project_yaml, target):
             website_link=data['link_website'],
             eo4society_link=data['link_eo4society']
         )
-    )
+    project_collection = create_project_collection(project_metadata)
 
-    # save this file and copy it to the catalog/projects/{project}/collection.json
-    collection.save_object(dest_href=os.path.join(target, 'project_collection.json'))
+    save_project_collection_to_osc(project_collection, Path(osc_path))
