@@ -2,10 +2,11 @@ import unittest
 import tempfile
 import shutil
 import os
+import pathlib
 import filecmp
 from importlib import resources
 
-from earthcode.template_generator import generate_template
+from earthcode.generators.template_generator import generate_template
 from test_utils import assertIsFile
 
 

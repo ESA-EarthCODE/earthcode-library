@@ -4059,7 +4059,7 @@ packages:
 - pypi: ./
   name: earthcode
   version: 0.1.7
-  sha256: 6ec5b0cc1cd4e44fe0ddb5a810fa0f46abe68a296d494670a68ea6981bea69c5
+  sha256: 86ade06f59e2da2c6dc7fcaa56947bb5586079cfb6bdd95c8b46791fe5480d20
   requires_dist:
   - pystac>=1.14.1,<2
   - xarray>=2025.12.0,<2026
@@ -4083,6 +4083,7 @@ packages:
   - pydantic>=2.12.5,<3
   - requests>=2.32.5,<3
   - tokenizers>=0.22.2,<1
+  - pyyaml>=6.0.3,<7
   - jupyter-book>=1.0.4,<2 ; extra == 'dev'
   - jupyterlab>=4.5.0,<5 ; extra == 'dev'
   - papermill>=2.7.0,<3 ; extra == 'dev'

@@ -1,2 +1,2 @@
-from .stac_generator import generate_stac
-from .template_generator import generate_template
+from .generators.stac_generator import generate_stac
+from .generators.template_generator import generate_template

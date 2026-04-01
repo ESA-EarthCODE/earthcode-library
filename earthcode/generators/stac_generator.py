@@ -1,9 +1,12 @@
+import logging
+import sys
 import argparse
 import os
 
-from earthcode import project_generator, product_generator, workflow_generator, experiment_generator
-import logging
-import sys
+from .experiment_generator import create_experiment_stac_from_template
+from .product_generator import create_product_stac_from_template
+from .project_generator import create_project_stac_from_template
+from .workflow_generator import create_workflow_stac_from_template
 
 logging.basicConfig(stream=sys.stdout, encoding='utf-8', level=logging.INFO)
 log = logging.getLogger()
@@ -22,16 +25,16 @@ def generate_stac(osc_path, project=None, workflow=None, experiment=None, produc
 
     if project is not None:
         log.info("Generating Project STAC json in OSC @ \"" + osc_path + "\"")
-        project_generator.create_project_stac_from_template(project, osc_path)
+        create_project_stac_from_template(project, osc_path)
     if workflow is not None:
         log.info("Generating Workflow STAC json in OSC @ \"" + osc_path + "\"")
-        workflow_generator.create_workflow_stac_from_template(workflow, osc_path)
+        create_workflow_stac_from_template(workflow, osc_path)
     if experiment is not None:
         log.info("Generating Experiment STAC json in OSC @ \"" + osc_path + "\"")
-        experiment_generator.create_experiment_stac_from_template(experiment, osc_path)
+        create_experiment_stac_from_template(experiment, osc_path)
     if product is not None:
         log.info("Generating Product STAC json in OSC @ \"" + osc_path + "\"")
-        product_generator.create_product_stac_from_template(product, osc_path)
+        create_product_stac_from_template(product, osc_path)
 
     if project is None and workflow is None and experiment is None and product is None:
         log.warning("No template provided."

@@ -2,7 +2,7 @@ import unittest
 import tempfile
 import shutil
 
-from earthcode.stac_generator import generate_stac
+from earthcode.generators.stac_generator import generate_stac
 
 
 class TestStacGenerator(unittest.TestCase):
