@@ -1,0 +1,41 @@
+---
+# Unique identifier for the workflow STAC item
+id: cool-project-workflow
+
+# Core workflow metadata
+title: Workflow to analyze Cool Project   # A concise, descriptive title of the workflow
+description: The first workflow able to process images from Cool Project  # A summary of what the workflow does
+project: cool-project-id                  # Project ID associated with the workflow
+project-title: CoolProjectTitle           # Title of associated project
+formats:                                  # Output formats of the workflow (e.g., GeoTIFF).
+- GeoTIFF
+- PNG
+keywords:                                 # Array of keywords to support discoverability (e.g., agriculture, crops).
+- keyword1
+- keyword2
+- keyword3...
+license: proprietary                      # License for the workflow
+sci:doi: https://doi.org/10.12345/abc-r4nd0mn   # DOI reference
+
+# Array of themes the workflow relates to. Each entry includes a concepts array with IDs (e.g., 'land') and a scheme URL.
+themes:
+  - land
+  - atmosphere
+  - cryosphere
+  - magnetosphere-ionosphere
+  - oceans
+  - solid-earth
+
+# Define links, link relations and link titles: links to public repository where the workflow codebase can be found, to service used to run the workflow etc.
+link_code:  https://raw.githubusercontent.com/MyProject/My-Project/refs/tags/..
+
+# Optional
+spatial_extent:                                 # BBOX
+    - - -180
+      - -90
+      - 180
+      - 90
+
+temporal_extent:                                # TIME
+    start: '2021-01-01T00:00:00Z'
+    end: '2021-12-31T23:59:59Z'
