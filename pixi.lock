@@ -4058,8 +4058,8 @@ packages:
   timestamp: 1734368817583
 - pypi: ./
   name: earthcode
-  version: 0.1.7
-  sha256: 334a97b40d7f802bd26f7065e94c887678e16ee20bdb3b8ca51b473f23b85d87
+  version: 0.1.8
+  sha256: 935604d4ecb42010ba8654ebcbca42d8674358f8063769318eecb2f27542724b
   requires_dist:
   - pystac>=1.14.1,<2
   - xarray>=2025.12.0,<2026
