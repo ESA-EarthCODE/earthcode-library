@@ -1,6 +1,7 @@
 
 # pixi environments
 .pixi
+.idea
 *.egg-info
 *__pycache__*
 *.json

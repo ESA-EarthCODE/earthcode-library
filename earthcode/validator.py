@@ -1,6 +1,7 @@
 import json
 import os
 import re
+from importlib import resources
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 import pystac
@@ -465,21 +466,21 @@ def _validate_experiment(ctx):
 
 
 def _validate_relative_schema(ctx, schema_file):
+    schema_resource = resources.files("earthcode").joinpath(*Path(schema_file).parts)
+    with resources.as_file(schema_resource) as schema_path:
+        with open(schema_path, 'r', encoding='utf-8') as f:
+            schema = json.load(f)
 
-    schema_file = Path(__file__).resolve().parent / schema_file
-    with open(schema_file, 'r', encoding='utf-8') as f:
-        schema = json.load(f)
-    
-    with open(ctx['file_path'], 'r', encoding='utf-8') as f:
-        data = json.load(f)
+        with open(ctx['file_path'], 'r', encoding='utf-8') as f:
+            data = json.load(f)
 
-    # Create a base URI for the folder containing the schema
-    base_uri = Path(schema_file).absolute().parent.as_uri() + "/"
-    resolver = RefResolver(base_uri=base_uri, referrer=schema)
-    try:
-        validate(instance=data, schema=schema, resolver=resolver)
-    except Exception as e:
-        ctx['errors'].append(e)
+        # Create a base URI for the folder containing the schema
+        base_uri = schema_path.absolute().parent.as_uri() + "/"
+        resolver = RefResolver(base_uri=base_uri, referrer=schema)
+        try:
+            validate(instance=data, schema=schema, resolver=resolver)
+        except Exception as e:
+            ctx['errors'].append(e)
 
 
 #TODO: Implement Item checks
