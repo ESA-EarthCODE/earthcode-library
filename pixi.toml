@@ -8,6 +8,9 @@ name = "earthcode"
 platforms = ["linux-64", "win-64", "osx-arm64"]
 version = "0.1.0"
 
+# wait 5 days before installing latest packages
+exclude-newer = "5d"
+
 [tasks]
 docs = "jupyter-book build ."
 
