@@ -1,30 +1,19 @@
 # Introduction
-
+The EarthCODE Library is a Python package developed to support the creation, validation, and search of Open Science Catalog metadata within the EarthCODE publishing workflow. It provides a shared implementation layer for catalog-related operations, reducing the need for project teams and platforms to maintain separate, ad hoc approaches for generating and checking metadata. This repository includes the core package, a command-line interface, usage examples, publication guides, and a test suite, 
 This repository provides Python tools for creating, validating, and searching EarthCODE [Open Science Catalog metadata](https://opensciencedata.esa.int/).
 
+Documentation on usage and guides is maintained at: https://esa-earthcode.github.io/earthcode-library/README.html 
 
-## Installation
+## 1. Installation
 ```bash
 pip install earthcode
 ```
+### Requirements
+The *minimum* required Python version if you would like to install the library locally is 3.12
 
-## Publishing to the Open Science catalog
+### For Developers:
 
-In the `guide/` folder you can find instructions how to publish your results to the Open Science Catalog.
-Start with the `guide/0.Prerequisites - local.ipynb` notebook if you are running the examples locally.
-Alternatively, start with `guide/0.Prerequisites-EarthCODE-Workspaces.ipynb` if you are using the EarthCODE workspace.
-
-
-## Examples
-In the examples folder you can find notebooks that show:
-- How to use the library to semantically search the Open Science Catalog - `examples/earthcode_data_discovery.ipynb`
-- (Experimental) How to combine the library and the OSC editor - `examples/contribute_via_osc_editor.ipynb`
-- How to validate a local copy of the catalog and open a PR - `examples/contribute_via_pr_osc.ipynb`
-
-
-# For Developers:
-
-## Local install
+### Local install
 1. `git clone https://github.com/ESA-EarthCODE/earthcode-library.git`
 2. Install pixi - https://pixi.sh/dev/installation/
 3. `cd earthcode-library`
@@ -33,9 +22,40 @@ In the examples folder you can find notebooks that show:
 
 You can run tests through `pixi run pytest`. If running on Windows use ` pixi run pytest --basetemp=C:\t` to avoid long path errors, since some of the project names are >260 chars.
 
-## To create a new release and publish it
+## 2. Quick start
+```bash
+# 1. Import the library
+import earthcode
 
-edit pyproject.toml to 1.1.4 and run
+# 2. Search through the catalog
+from earthcode.search import search
+
+# 3. Search through semantix text
+# Here we take as an example the search done by semantix text and search the catalog via the collection.id which is known
+search(collection_ids="seasfire-cube")[0]
+
+# 4. Filter the products in the catalog
+search("global chlorophyll dataset", variable=chlorophyll.id, type="products", mission="sentinel-3")
+```
+
+## 3. How to contribute to Open Science Catalogue? 
+With `earthcode` library creating new entries in the catalogue is semi-automatic. Please find step by step instructions in the `guide/` folder
+Start with the `guide/0.Prerequisites - local.ipynb` notebook if you are running the examples locally.
+Alternatively, start with `guide/0.Prerequisites-EarthCODE-Workspaces.ipynb` if you are using the [EarthCODE Workspace](https://workspace.earthcode.eox.at/).
+
+## 4. Search through Open Science Catalogue
+In the `examples/` folder you can find notebooks that show:
+- How to use the library to semantically search the Open Science Catalog - `examples/earthcode_data_discovery.ipynb`
+
+# Looking for support? 
+We are ready to assist you in case you have any questions/found a bug or mistake, please use GitHub Issues to open a ticket!  
+Alternatively contact the team via e-mail: earthcode@esa.int 
+
+If you would like to request a specific feature, or any question to the community of Earthcode and library developers, please use the [EarthCODE discourse forum](https://discourse-earthcode.eox.at/) 
+
+## How to contribute to `earthcode` library development? 
+
+Edit pyproject.toml to 1.1.4 and run
 
 - `pixi lock`
 - `git add pyproject.toml pixi.toml pixi.lock`
