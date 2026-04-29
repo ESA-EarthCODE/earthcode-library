@@ -8,6 +8,7 @@ import yaml
 
 from earthcode.static import create_product_collection, ProductCollectionMetadata
 from earthcode.git_add import save_product_collection_to_catalog
+from earthcode.validator import validateOSCEntry
 
 
 logging.basicConfig(stream=sys.stdout, encoding="utf-8", level=logging.INFO)
@@ -70,3 +71,8 @@ def create_product_stac_from_template(project_yaml, osc_path):
     product_collection = create_product_collection(product_metadata)
 
     save_product_collection_to_catalog(product_collection, Path(osc_path))
+
+    # TODO: Fix EoMission Link validation failing
+    # errors = validateOSCEntry(product_collection.to_dict(), Path(osc_path))
+    # if errors:
+    #     raise AssertionError(f"Catalog validation failed. errors={len(errors)}\n{errors}")

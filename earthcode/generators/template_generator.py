@@ -67,7 +67,7 @@ def main():
     parser.add_argument("-o", "--product", action='store_true',
                         help="If present generate a product template")
     parser.add_argument("-t", "--target", type=str,
-                        help="The target location where the templates will be generated.")
+                        help="The target location where the templates will be generated. If empty the CWD will be used")
 
     args = parser.parse_args()
 

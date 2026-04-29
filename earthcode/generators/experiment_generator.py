@@ -7,6 +7,7 @@ import yaml
 
 from earthcode.static import create_experiment_record, ExperimentMetadata
 from earthcode.git_add import save_experiment_record_to_osc
+from earthcode.validator import validateOSCEntry
 
 logging.basicConfig(stream=sys.stdout, encoding='utf-8', level=logging.INFO)
 log = logging.getLogger()
@@ -51,3 +52,7 @@ def create_experiment_stac_from_template(experiment_yaml, osc_path):
     experiment_record = create_experiment_record(experiment_metadata)
 
     save_experiment_record_to_osc(experiment_record, Path(osc_path))
+
+    errors = validateOSCEntry(experiment_record, Path(osc_path))
+    if errors:
+        raise AssertionError(f"Catalog validation failed. errors={len(errors)}\n{errors}")

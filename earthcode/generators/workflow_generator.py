@@ -7,6 +7,7 @@ import yaml
 
 from earthcode.git_add import save_workflow_record_to_osc
 from earthcode.static import create_workflow_record, WorkflowMetadata
+from earthcode.validator import validateOSCEntry
 
 logging.basicConfig(stream=sys.stdout, encoding='utf-8', level=logging.INFO)
 log = logging.getLogger()
@@ -50,3 +51,7 @@ def create_workflow_stac_from_template(project_yaml, osc_path):
     workflow_record = create_workflow_record(workflow_metadata)
 
     save_workflow_record_to_osc(workflow_record, Path(osc_path))
+
+    errors = validateOSCEntry(workflow_record, Path(osc_path))
+    if errors:
+        raise AssertionError(f"Catalog validation failed. errors={len(errors)}\n{errors}")

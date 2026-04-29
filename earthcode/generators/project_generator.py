@@ -8,6 +8,7 @@ import yaml
 
 from earthcode.static import create_project_collection, ProjectCollectionMetadata
 from earthcode.git_add import save_project_collection_to_osc
+from earthcode.validator import validateOSCEntry
 
 logging.basicConfig(stream=sys.stdout, encoding='utf-8', level=logging.INFO)
 log = logging.getLogger()
@@ -32,7 +33,7 @@ def create_project_stac_from_template(project_yaml, osc_path):
         [project_cms.append((member['name'], member['email'])) for member in data['consortium_members']]
 
     project_metadata = ProjectCollectionMetadata(
-            project_id=data['id'] ,
+            project_id=data['id'],
             project_title=data['title'],
             project_description=data['description'],
             project_status=data['status'],
@@ -50,3 +51,7 @@ def create_project_stac_from_template(project_yaml, osc_path):
     project_collection = create_project_collection(project_metadata)
 
     save_project_collection_to_osc(project_collection, Path(osc_path))
+
+    errors = validateOSCEntry(project_collection.to_dict(), Path(osc_path))
+    if errors:
+        raise AssertionError(f"Catalog validation failed. errors={len(errors)}\n{errors}")
