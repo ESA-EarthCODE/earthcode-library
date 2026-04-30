@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from datetime import datetime
 import sys
@@ -72,7 +73,9 @@ def create_product_stac_from_template(project_yaml, osc_path):
 
     save_product_collection_to_catalog(product_collection, Path(osc_path))
 
-    # TODO: Fix EoMission Link validation failing
-    # errors = validateOSCEntry(product_collection.to_dict(), Path(osc_path))
-    # if errors:
-    #     raise AssertionError(f"Catalog validation failed. errors={len(errors)}\n{errors}")
+    # need to run validation on the saved product collection to validate the final json in the OSC repo, not the one created in memory
+    with open(Path(osc_path) / f'products/{product_collection.id}/collection.json', "r", encoding="utf-8") as f:
+        json_product = json.load(f)
+        errors = validateOSCEntry(json_product, Path(osc_path))
+        if errors:
+            raise AssertionError(f"Catalog validation failed. errors={len(errors)}\n{errors}")
