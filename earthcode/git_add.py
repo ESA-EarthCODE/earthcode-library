@@ -150,7 +150,7 @@ def save_product_collection_to_catalog(
             title=f'{product_title}'
         )
     )
-    with open(catalog_root / f'projects/{project_id}/collection.json', 'w') as f:
+    with open(catalog_root / f'projects/{project_id}/collection.json', 'w', encoding='utf-8') as f:
         json.dump(
             project_collection.to_dict(include_self_link=False, transform_hrefs=False), 
             f, ensure_ascii=False, indent=2)
