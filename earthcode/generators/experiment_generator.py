@@ -1,5 +1,6 @@
 from pathlib import Path
 from datetime import datetime
+import json
 import logging
 import sys
 
@@ -7,6 +8,7 @@ import yaml
 
 from earthcode.static import create_experiment_record, ExperimentMetadata
 from earthcode.git_add import save_experiment_record_to_osc
+from earthcode.validator import validateOSCEntry
 
 logging.basicConfig(stream=sys.stdout, encoding='utf-8', level=logging.INFO)
 log = logging.getLogger()
@@ -51,3 +53,11 @@ def create_experiment_stac_from_template(experiment_yaml, osc_path):
     experiment_record = create_experiment_record(experiment_metadata)
 
     save_experiment_record_to_osc(experiment_record, Path(osc_path))
+
+    # validate the saved record, since catalog links are updated when written to disk
+    experiment_path = Path(osc_path) / "experiments" / experiment_record["id"] / "record.json"
+    with open(experiment_path, "r", encoding="utf-8") as f:
+        json_experiment = json.load(f)
+        errors = validateOSCEntry(json_experiment, Path(osc_path))
+        if errors:
+            raise AssertionError(f"Catalog validation failed. errors={len(errors)}\n{errors}")

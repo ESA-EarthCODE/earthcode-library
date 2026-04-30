@@ -225,3 +225,15 @@ def test_notebooks(catalog_root:Path):
             cwd=str(repo_root),
             log_output=True,
     )
+
+    # templates
+    templates_cwd = catalog_root.parent / "templates"
+    templates_cwd.mkdir()
+    pm.execute_notebook(
+            input_path=str(notebooks_dir / "5.Templates.ipynb"),
+            output_path=None,
+            parameters={},
+            kernel_name="python3",
+            cwd=str(templates_cwd),
+            log_output=True,
+    )

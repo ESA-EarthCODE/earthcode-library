@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from datetime import datetime
 import sys
@@ -8,6 +9,7 @@ import yaml
 
 from earthcode.static import create_product_collection, ProductCollectionMetadata
 from earthcode.git_add import save_product_collection_to_catalog
+from earthcode.validator import validateOSCEntry
 
 
 logging.basicConfig(stream=sys.stdout, encoding="utf-8", level=logging.INFO)
@@ -70,3 +72,10 @@ def create_product_stac_from_template(project_yaml, osc_path):
     product_collection = create_product_collection(product_metadata)
 
     save_product_collection_to_catalog(product_collection, Path(osc_path))
+
+    # need to run validation on the saved product collection to validate the final json in the OSC repo, not the one created in memory
+    with open(Path(osc_path) / f'products/{product_collection.id}/collection.json', "r", encoding="utf-8") as f:
+        json_product = json.load(f)
+        errors = validateOSCEntry(json_product, Path(osc_path))
+        if errors:
+            raise AssertionError(f"Catalog validation failed. errors={len(errors)}\n{errors}")

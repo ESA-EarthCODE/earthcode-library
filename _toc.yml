@@ -11,6 +11,7 @@ parts:
       - file: guide/2.1.Product_files_self_hosted
       - file: guide/3.Workflow
       - file: guide/4.Experiment
+      - file: guide/5.Templates
   - caption: Examples
     chapters:
       - file: examples/earthcode_data_discovery
