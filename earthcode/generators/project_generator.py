@@ -1,5 +1,6 @@
 from pathlib import Path
 from datetime import datetime
+import json
 import logging
 import sys
 
@@ -52,6 +53,10 @@ def create_project_stac_from_template(project_yaml, osc_path):
 
     save_project_collection_to_osc(project_collection, Path(osc_path))
 
-    errors = validateOSCEntry(project_collection.to_dict(), Path(osc_path))
-    if errors:
-        raise AssertionError(f"Catalog validation failed. errors={len(errors)}\n{errors}")
+    # validate the saved collection, since catalog links are updated when written to disk
+    project_path = Path(osc_path) / "projects" / project_collection.id / "collection.json"
+    with open(project_path, "r", encoding="utf-8") as f:
+        json_project = json.load(f)
+        errors = validateOSCEntry(json_project, Path(osc_path))
+        if errors:
+            raise AssertionError(f"Catalog validation failed. errors={len(errors)}\n{errors}")

@@ -1,5 +1,6 @@
 from pathlib import Path
 from datetime import datetime
+import json
 import logging
 import sys
 
@@ -53,6 +54,10 @@ def create_experiment_stac_from_template(experiment_yaml, osc_path):
 
     save_experiment_record_to_osc(experiment_record, Path(osc_path))
 
-    errors = validateOSCEntry(experiment_record, Path(osc_path))
-    if errors:
-        raise AssertionError(f"Catalog validation failed. errors={len(errors)}\n{errors}")
+    # validate the saved record, since catalog links are updated when written to disk
+    experiment_path = Path(osc_path) / "experiments" / experiment_record["id"] / "record.json"
+    with open(experiment_path, "r", encoding="utf-8") as f:
+        json_experiment = json.load(f)
+        errors = validateOSCEntry(json_experiment, Path(osc_path))
+        if errors:
+            raise AssertionError(f"Catalog validation failed. errors={len(errors)}\n{errors}")

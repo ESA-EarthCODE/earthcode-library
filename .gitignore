@@ -15,3 +15,7 @@ dev.ipynb
 earthcode/models
 guide/project.yaml
 guide/.ipynb_checkpoints/
+guide/product.yaml
+earthcode/generators/project_generator.py
+guide/workflow.yaml
+guide/experiment.yaml

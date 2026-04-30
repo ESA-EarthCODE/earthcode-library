@@ -1,5 +1,6 @@
 from pathlib import Path
 from datetime import datetime
+import json
 import logging
 import sys
 
@@ -52,6 +53,10 @@ def create_workflow_stac_from_template(project_yaml, osc_path):
 
     save_workflow_record_to_osc(workflow_record, Path(osc_path))
 
-    errors = validateOSCEntry(workflow_record, Path(osc_path))
-    if errors:
-        raise AssertionError(f"Catalog validation failed. errors={len(errors)}\n{errors}")
+    # validate the saved record, since catalog links are updated when written to disk
+    workflow_path = Path(osc_path) / "workflows" / workflow_record["id"] / "record.json"
+    with open(workflow_path, "r", encoding="utf-8") as f:
+        json_workflow = json.load(f)
+        errors = validateOSCEntry(json_workflow, Path(osc_path))
+        if errors:
+            raise AssertionError(f"Catalog validation failed. errors={len(errors)}\n{errors}")
