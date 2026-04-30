@@ -13,3 +13,5 @@ _build/
 dist/
 dev.ipynb
 earthcode/models
+guide/project.yaml
+guide/.ipynb_checkpoints/
