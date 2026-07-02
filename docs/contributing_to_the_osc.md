@@ -121,9 +121,9 @@ Use the library and follow the contribution path below.
    The tutorials show how to generate STAC Item metadata for the main supported file
    formats:
 
-   - Generate STAC Item metadata for `Zarr` data - `./tutorials/zarr_file_metadata.ipynb`.
-   - Generate STAC Item metadata for `COG` data - `./tutorials/zarr_file_metadata.ipynb`.
-   - Generate STAC Item metadata for `Parquet` data - `./tutorials/zarr_file_metadata.ipynb`.
+   - Generate STAC Item metadata for `Zarr` data - `docs/tutorials/zarr_file_metadata.ipynb`.
+   - Generate STAC Item metadata for `COG` data - `docs/tutorials/zarr_file_metadata.ipynb`.
+   - Generate STAC Item metadata for `Parquet` data - `docs/tutorials/zarr_file_metadata.ipynb`.
 
 
    > If your require the data to be hosted and it does not have a stable URL:
@@ -150,48 +150,43 @@ Use the library and follow the contribution path below.
    Data Steward team reviews the contribution and may ask for corrections before
    merging it into the published catalog.
 
-
-
-## How-to guides
-
-How-to guides are show how you can complete a specific task with the contributor's own
-metadata You will combine different aspects of variaous how-to-guides in order to make a contribution.
-
-The how-to guide set include:
-
-- `./guides/local_setup.ipynb` create and validate project metadata.
-- `./guides/workspaces_setup.ipynb` create and validate project metadata.
-- `./guides/Project.ipynb` create and validate project metadata.
-- `./guides/Product.ipynb` create and validate product metadata.
-- `./guides/Workflow.ipynb` create and validate workflow metadata.
-- `./guides/Experiment.ipynb` create and validate experiment metadata.
-- `./guides/adding_child_catalog.ipynb` to show how to add a seperate catalog( the current 2.1.Product_files_PRR.ipynb)
-- `./guides/adding_stac_items.ipynb` for files that already have stable public URLs.
-- `./guides/Templates.ipynb` if you prefer the YAML-template workflow.
-
-
 ## Tutorials
 
-The tutorials demonstrate how the different the pieces fit together with example data:
+The tutorials demonstrate how the different pieces fit together with example data:
 
 - A complete worked example showing how a project, product, workflow,
-  experiment, and product-file metadata are added together - `./tutorials/end_to_end_subglacial_lakes.ipynb`. The script/notebook you create will look something like this.
+  experiment, and product-file metadata are contributed to the OSC - `docs/tutorials/end_to_end_subglacial_lakes.ipynb`. The script/notebook you create will look something like this.
 
 - A tutorial on how to search existing OSC data so contributors can reuse
   existing projects, variables, EO missions, themes, and examples where
   appropriate - `./tutorials/earthcode_data_discovery.ipynb`.
 
-- How to generate STAC Item metadata for the main supported file
-   formats:
+- How to generate STAC Item metadata for the main supported file formats:
+   - Generate STAC Item metadata for `Zarr` data - `docs/tutorials/zarr_file_metadata.ipynb`.
+   - Generate STAC Item metadata for `COG` data - `docs/tutorials/cog_file_metadata.ipynb`.
+   - Generate STAC Item metadata for `Parquet` data - `docs/tutorials/parquet_file_metadata.ipynb`.
 
-   - Generate STAC Item metadata for `Zarr` data - `./tutorials/zarr_file_metadata.ipynb`.
-   - Generate STAC Item metadata for `COG` data - `./tutorials/cog_file_metadata.ipynb`.
-   - Generate STAC Item metadata for `Parquet` data - `./tutorials/parquet_file_metadata.ipynb`.
+
+## How-to guides
+
+How-to guides show how you can complete a specific task with your own data. You can start working through them in order if you like. You will have to combine different aspects of variaous how-to-guides in order to make a contribution.
+
+The how-to guides include:
+
+- `docs/guides/0.Prerequisites-EarthCODE-Workspaces.ipynb` - how to setup the enviroment to run the rest of the notebooks and commit the results locally.
+- `docs/guides/Prerequisites-EarthCODE-Workspaces.ipynb` - how to setup the enviroment to run the rest of the notebooks and commit the results, using the EarthCODE workspace.
+- `docs/guides/1.Project.ipynb` create and validate project metadata.
+- `docs/guides/2.Product.ipynb` create and validate product metadata.
+- `docs/guides/3.Workflow.ipynb` create and validate workflow metadata.
+- `docs/guides/4.Experiment.ipynb` create and validate experiment metadata.
+- `docs/guides/2.1.Product_files_PRR.ipynb` to show how to add a seperate catalog to a product.
+- `docs/guides/2.1.Product_files_self_hosted.ipynb.ipynb` how to add files that already have stable public URLs.
+- `docs/guides/5.Templates.ipynb` if you prefer the YAML-template workflow.
 
 
 ## Next steps
 
 Start contributing by :
 1. Creating a local or remote enviroment
-2. Creating your own script or jupyter notebook to generate the metadata
+2. Creating your own script or jupyter notebook to generate the metadata for your project, products, data files
 3. Opening a PR against the Open Science Catalog, to start the review process. OR email the earthcode team for support
