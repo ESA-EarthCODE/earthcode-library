@@ -22,7 +22,7 @@ def catalog_root(tmp_path: Path) -> Path:
 def test_notebooks(catalog_root:Path):
 
     repo_root = Path(__file__).resolve().parents[1]
-    notebooks_dir = repo_root / "guide"
+    notebooks_dir = repo_root / "docs/guides/"
     unique = "123456"
     project_id = f"4datlantic-ohc{unique}"
     project_title = "4DAtlantic-OHC"

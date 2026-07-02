@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 import pystac
+import json
+import shapely
 from pystac.extensions.scientific import ScientificExtension
 
 from earthcode.metadata_input_definitions import (
@@ -570,3 +572,71 @@ def create_item(item_metadata: ItemMetadata, stac_version='1.0.0') -> pystac.Ite
     )
 
     return item
+
+def generic_stac_item_to_earthcode_stac_item(item: pystac.Item, collection:str, asset_key: str = None):
+    
+    # 1. Core Item Metadata
+    item_id = item.id
+    item_bbox = item.bbox if item.bbox else [-180.0, -90.0, 180.0, 90.0]
+    
+    # Handle datetime (STAC items might use start/end instead of a single datetime)
+    if item.datetime:
+        item_datetime = item.datetime.isoformat()
+    else:
+        item_datetime = item.properties.get("start_datetime", "")
+
+    # STAC generally stores license/description in the Collection, but they can 
+    # exist in the Item's properties.
+    item_license = item.properties.get("license", "unknown")
+    item_description = item.properties.get("description", "")
+    
+    # 2. Asset Metadata
+    item_data_url = ""
+    item_data_mime_type = ""
+    item_data_title = item.properties['title'] if 'title' in item.properties else  ""
+    
+    target_asset = None
+    if asset_key and asset_key in item.assets:
+        target_asset = item.assets[asset_key]
+    elif item.assets:
+        # Fallback to the first asset in the dictionary if no key is provided
+        target_asset = list(item.assets.values())[0]
+        
+    if target_asset:
+        item_data_url = target_asset.href
+        item_data_mime_type = target_asset.media_type or ""
+        item_data_title = target_asset.title or item_data_title
+        
+    # 3. Extra Fields
+    # Filter out properties we already explicitly assigned to avoid duplication
+    known_keys = {"datetime", "start_datetime", "end_datetime", "license", "description"}
+    item_extra_fields = {
+        key: value 
+        for key, value in item.properties.items() 
+        if key not in known_keys
+    }
+    
+    ## generate a STAC item associated with a specific collection
+    geometry = json.loads(json.dumps(shapely.box(*item_bbox).__geo_interface__))
+    item_metadata = ItemMetadata(
+        itemid=item_id,
+        geometry=geometry,
+        data_time=item_datetime,
+        bbox=item_bbox,
+        product_id=collection,
+        license=item_license,
+        description=item_description,
+        data_url=item_data_url,
+        data_mime_type=item_data_mime_type,
+        data_title=item_data_title,
+        extra_fields=item_extra_fields,
+    )
+    earthcode_item = create_item(item_metadata)
+
+    if 'start_datetime' in item.properties:
+        earthcode_item.properties['start_datetime'] = item.properties['start_datetime']
+        earthcode_item.properties['end_datetime'] = item.properties['end_datetime']
+        earthcode_item.properties['datetime'] = item.properties['datetime']
+
+    earthcode_item.extra_fields['title'] = item_data_title
+    return earthcode_item
