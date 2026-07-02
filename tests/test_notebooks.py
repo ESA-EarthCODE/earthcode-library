@@ -103,10 +103,8 @@ def test_notebooks(catalog_root:Path):
         "project_id": project_id,
         "project_title": project_title,
         "workflow_themes": ["oceans"],
-        "workflow_contracts_info": [("Magellium", "contact@magellium.fr")],
-        "codeurl": "https://github.com/ESA-EarthCODE/open-science-catalog-metadata",
+        "workflow_url": "https://github.com/ESA-EarthCODE/open-science-catalog-metadata",
         "workflow_doi": None,
-        "include_workflow_bbox": False,
         "include_workflow_time": False,
     }
 
@@ -120,13 +118,12 @@ def test_notebooks(catalog_root:Path):
         "experiment_formats": ["GeoTIFF"],
         "experiment_themes": ["oceans"],
         "experiment_input_parameters_link": "https://github.com/deepesdl/cube-gen",
-        "experiment_enviroment_link": "https://github.com/deepesdl/cube-gen",
+        "experiment_environment_link": "https://github.com/deepesdl/cube-gen",
         "workflow_id": workflow_id,
         "workflow_title": workflow_title,
         "product_id": product_id,
         "product_title": product_title,
         "experiment_contacts": None,
-        "include_experiment_bbox": False,
         "include_experiment_time": False,
     }
 

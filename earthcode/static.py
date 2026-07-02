@@ -145,7 +145,12 @@ def _apply_project_contacts(
 
     _ensure_extension(collection, CONTACTS_SCHEMA_URI)
     to_contact = _create_contact(technical_officer_name, ["technical_officer"], [technical_officer_email])
-    consortium_contacts = [_create_contact(name, ["consoritum_member"], [email]) for name, email in consortium_members]
+    consortium_contacts = []
+    for name, email in consortium_members:
+        if email and len(email) > 0:
+            consortium_contacts.append(_create_contact(name, ["consoritum_member"], [email]))
+        else:
+            consortium_contacts.append(_create_contact(name, ["consoritum_member"], None))
     collection.extra_fields["contacts"] = [to_contact] + consortium_contacts
 
 
