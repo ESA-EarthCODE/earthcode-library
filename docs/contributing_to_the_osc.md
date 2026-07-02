@@ -118,8 +118,8 @@ Use the library and follow the contribution path below.
    information to be usable: stable URL, title, description, timestamp, spatial
    footprint, bounding box, MIME type, license, and any useful extra fields.
 
-   The tutorials show how to generate STAC Item metadata for the main supported file
-   formats:
+   The tutorials below show how to generate STAC Item metadata for the main supported file
+   formats. You will have to write your own code to generate STAC items for each file:
 
    - Generate STAC Item metadata for `Zarr` data - `docs/tutorials/zarr_file_metadata.ipynb`.
    - Generate STAC Item metadata for `COG` data - `docs/tutorials/zarr_file_metadata.ipynb`.
@@ -179,8 +179,6 @@ The how-to guides include:
 - `docs/guides/2.Product.ipynb` create and validate product metadata.
 - `docs/guides/3.Workflow.ipynb` create and validate workflow metadata.
 - `docs/guides/4.Experiment.ipynb` create and validate experiment metadata.
-- `docs/guides/2.1.Product_files_PRR.ipynb` to show how to add a seperate catalog to a product.
-- `docs/guides/2.1.Product_files_self_hosted.ipynb.ipynb` how to add files that already have stable public URLs.
 - `docs/guides/5.Templates.ipynb` if you prefer the YAML-template workflow.
 
 
