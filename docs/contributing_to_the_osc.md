@@ -1,190 +1,159 @@
-# Contributing to the Open Science Catalog
+# Contributing to the Open Science Catalogue
 
-## 1. Intro
+## 1. Introduction
 
-This page explains how to make contribute data and metadata to the Open Science Catalog (OSC) using the `earthcode-library`.
-It describes the main concepts, the metadata and data the OSC needs from a contributor, and where the EarthCODE Library helps.
+This document explains how to contribute scientific resources (datasets, workflows, experiments, documentation) and their metadata to the Open Science Catalog (OSC) using the `earthcode-library`.
 
-Once you are familiar with the process, start working by :
-1. Creating a local or remote enviroment
-2. **Creating your own script or jupyter notebook** to generate the metadata
-3. Open a PR against the Open Science Catalog, to start the review process.
+The `earthcode-library` is a Python-based toolkit that helps users create, validate, and manage OSC metadata following the catalogue requirements and standards.
+
+This guide focuses on the end-to-end process and the required steps to contribute: 
+
+* Getting familiar with the main concepts of the Open Science Catalog and the information required to describe your research outcomes.
+* Preparing the necessary metadata and associated data assets.
+* Generating metadata using the earthcode-library in a format compatible with the Open Science Catalog.
+* Submitting your contribution for review and publication.
+
+Additionally, it describes the available tutorials and how-to-guides.
+
+**Once you understand the contribution process, follow these steps:**
+
+1. **Set up your working environment:**
+    * Create a local environment on your computer or use a remote/cloud workspace.
+    * Install the EarthCODE Library and any required dependencies.
+2. **Create metadata to describe your scientific outcomes:**
+    * Develop **your own Python script or Jupyter Notebook** that generates the metadata.
+    * Use the earthcode-library to facilitate the process and validate the metadata against the Open Science Catalogue requirements.
+3. **Generate file-level metadata** to ensure data long-term accessibility and findability.
+4. **Submit your contribution:**
+    * Open a Pull Request (PR) against the Open Science Catalog repository and start the review process. 
 
 ## 2. What is the Open Science Catalog?
 
-The Open Science Catalog indexes Earth Observation research
-outputs from ESA-funded activities. It helps users find projects, datasets,
-workflows, experiments, variables, EO missions, themes, and the files or assets
-that make up published scientific products.
+The Open Science Catalog (OSC) indexes Earth Observation research outputs from ESA-funded activities. It helps users find scientific products and datasets, workflows, and experiments. It also links the scientific outcomes to the geophysical variables that describe them and related EO-missions. All products and workflows are categorised by themes corresponding to the environmental domain to facilitate product discoverability. 
 
-The OSC is built around STAC, the SpatioTemporal Asset Catalog standard. STAC
-provides a common way to describe geospatial and temporal data, the assets that
-belong to it, and the links between related resources.
+The OSC is built around STAC, the Spatio-Temporal Asset Catalog standard. STAC provides a common way to describe geospatial and temporal data, the assets that belong to it, and the links between related resources.
 
 The main OSC concepts are:
 
-- `Project`: the ESA Earth Observation Programme activity or research context.
-  A project records the official title, description, time span, spatial extent,
-  themes, license, Technical Officer contact, website links, and consortium
-  members.
-- `Product / Dataset`: the scientific output that users should discover and
-  access. A project can have one product or many products.
-- `Files / data`: the actual assets behind a product. Each file, archive, scene,
-  or time-specific data object should be described with file-level metadata,
-  usually as a STAC Item.
-- `Workflow / code`: the reusable scientific code, processing logic, or method
-  used to generate a product.
-- `Experiment`: a specific execution or implementation of a workflow that
-  generated a product. It links the product, workflow, input parameters,
-  runtime environment, formats, themes, and license.
-- `Variables`: controlled terms that describe the geophysical, climate, or
-  environmental quantities represented by a product.
-- `EO missions`: controlled terms that describe the observing missions or source
-  categories used to generate the product. Products based on in-situ data or
-  numerical models should use the relevant OSC source category.
-- `Themes`: broad OSC science domains used for discovery, such as atmosphere,
-  cryosphere, land, oceans, or solid earth.
-- `Licenses`: required metadata for publishable projects, products, workflows,
-  experiments, and files. Missing or unclear licenses can block publication.
+* **`Project`:** the ESA-funded Earth Observation Programme activity or research. A project records the official title, description, time span, spatial extent, environmental domain (theme), contact to ESA Technical Officer, list of consortium member(s), links to external project website, and product(s) generated by project. 
+* **`Product`:** the scientific output that users should be able to discover, understand, access, cite, and reuse. A product should include a clear description, licensing information, contributing EO missions, geophysical variables, spatial and temporal coverage, provenance, and access information.
+* **`Assets`:** the actual files forming a product. Each file, archive, scene, or time-specific data object should be described with file-level metadata. 
+* **`Workflow`:** the reusable scientific code, processing logic, or method used to generate a product. In the Open Science Catalog, workflows are linked to projects, provided with a specific license, version, and the execution environment (usually stored in a GitHub repo or stored in an application package). 
+* **`Experiment`:** a specific execution or implementation of a workflow that provides a complete context to generate a product. It provides information on input data and parameters, configuration settings, and the runtime environment used to create the output. Each experiment is linked to generated products, the workflow that was used, and the project under which it was developed. 
+* **`Variables`:** controlled terms that describe the geophysical, climate, or environmental quantities represented by a product. Variables are selected from recognised community standards, including the WMO OSCAR and GCMD keyword databases, to ensure consistent discovery and interoperability across datasets.
+* **`EO missions`:** controlled terms that are used to identify the Earth Observation satellite mission(s) or observing systems used to generate a product. Products based on in-situ data or numerical models should use the relevant source category, also stored under the category of eo-missions concept.
+* **`Themes`:** terms used to gather products, projects, workflows, and experiments under a specific environmental domain. Themes are used to facilitate the discovery of these concepts.
 
-The important idea is that OSC records are connected. A product links back to a
-project. File-level metadata links assets to the product. A workflow explains the
-method. An experiment explains a particular execution of that method. Together
-these records make the output discoverable, reusable, and reviewable.
+Each **project, product, workflow, and experiment** must be associated with a **clear and valid license type** to define how the resource can be accessed, used, shared, and reused. Licensing information is required for publication in the Open Science Catalogue, and missing or ambiguous licenses may prevent the resource from being published.
+
+The key principle of the Open Science Catalogue (OSC) is that all published records are interconnected. This is implemented to enable traceability and transparency between ESA-funded EO projects and their scientific outputs. A **product** links to its parent **project**, **file-level metadata** links individual assets to the product, a **workflow** documents the method used to generate the results, and an **experiment** captures a specific execution of that method. Together these concepts make the output discoverable, reusable, and reviewable. 
 
 ## 3. Contributing to the Open Science Catalog
 
-To process your data and publish it on the Open Science Catalog, we need:
+To publish your data in the Open Science Catalogue, you need:
 
-1. Your data hosted in a long-term repository in a format suitable for object storage and streaming.
-
-   Data is easiest to publish when it is already stored at stable URLs and is in
-   a cloud-optimised format. The preferred formats are `Zarr`, `COG`, and `Parquet`.
-
+1. **Host your data in a Long-Term Repository**
+   Your data should be hosted in a long-term repository in a format suitable for cloud-based object storage and streaming. Data is easiest to publish when it is already stored at stable URLs and is in a cloud-optimised format. The preferred formats are Zarr, COG, and Parquet. 
 
 | Format | Best for | Why it matters in object storage |
 | --- | --- | --- |
-| Zarr | Multidimensional arrays such as time/depth/y/x cubes | Chunked reads let analysis load only the pieces it needs. |
-| Cloud Optimized GeoTIFF (COG) | Single rasters or raster stacks exposed as files | Internal tiling and overviews enable efficient range reads and quicklooks. |
-| GeoParquet | Vector geometries and tabular point data | Columnar storage, embedded geospatial metadata, and fast filtering. |
+| Zarr | Multidimensional arrays such as time/depth/y/x cubes | Supports chunked access and analysis to load only the required portions of the full dataset. |
+| Cloud Optimized GeoTIFF (COG) | Single rasters or raster stacks | Internal tiling and overviews enable efficient range reads and visualisation. |
+| GeoParquet | Vector geometries and tabular point data | Supports efficient filtering and querying through columnar storage and embedded geospatial metadata. |
 
+> See the examples for conversion patterns.
+> 
+> **If your data is not yet in a suitable format, the EarthCODE team can help you decide what conversion or hosting path is appropriate. If you are at this stage, email the EarthCODE team at earth-code@esa.int**
+> 
+> If your data is NOT hosted on object storage, the EarthCODE team can help move your data to ESA object storage. You still need to complete all the steps below and open the PR to provide enough information to support you.
 
-   > See the examples for conversion patterns. 
-   
-   > ** If your data is not yet in a suitable format, the EarthCODE team can help you decide what
-   conversion or hosting path is appropriate. If you are at this stage, email the EarthCODE team at earthcode@esa.int **
+2. **Metadata**
+   Provide the metadata describing your project, products, workflows, experiments, and associated data assets, following the requirements outlined in **Section 2**.
 
-   > If your data is NOT hosted on object storage, the EarthCODE team can help move your data to ESA object storage. You still need to complete all the steps below and open the PR, to provide enough information to support you.
-
-2. Metadata information about all aspects of the data and project described in section 2.
-
-3. A PR against the `open-science-catalog-metadata` repostiory with the information from 1), 2).
-
+3. **Pull Request submission**
+   Submit the Pull Request (PR) to the `open-science-catalog-metadata` repository with the information from Step 1 and 2. In the PR you can also add any additional information supporting the publication and review process. 
 
 ## 4. Using the EarthCODE Library
 
-The EarthCODE Library helps create, save, validate, and search OSC metadata. It
-does not replace scientific judgement: contributors still need to provide
-accurate descriptions, licenses, extents, variables, missions, workflow links,
-experiment context, and file-level metadata.
+The EarthCODE Library helps users create, save, validate, and search Open Science Catalogue (OSC) metadata. It does not replace scientific judgement: contributors still need to provide accurate descriptions, licenses, extents, variables, missions, workflow links, experiment context, and file-level metadata.
 
 Use the library and follow the contribution path below.
 
-1. Set up the EarthCODE Library environment locally or remotely.
+1. **Set up your working environment.**
+   You can contribute to OSC by using the EarthCODE Library from a local environment or from an EarthCODE Workspace - https://workspace.earthcode.eox.at/.
+    * Use the local setup how-to guide if you want to install the library, clone your OSC metadata fork, run notebooks locally, and open a pull request from your own machine.
+    * Use the EarthCODE workspace setup how-to guide if you want to work in the workspace with JupyterLab and the integrated platform tooling.
 
-   You can contribute from a local environment or from an EarthCODE Workspace.
+2. **Create metadata to describe your scientific outcomes.**
+   **Create a new Jupyter Notebook** or Python script to add project, product, workflow, and experiment metadata to your `open-science-catalog-metadata` fork.
+   We recommend creating records in the following order: 
+    1) **Project:** provides top-level context for the contribution. 
+    2) **Product(s):** to describe the dataset(s) which are linked to a Project. 
+    3) **Workflow:** code or processing logic used to generate a Product. 
+    4) **Experiment:** specific workflow execution used to generate a specific Product.
 
-   - Use the local setup how-to guide if you want to install the library, clone
-     your OSC metadata fork, run notebooks locally, and open a pull request from
-     your own machine.
+3. **Generate File-Level Metadata.**
+   In addition to product metadata, you need to generate STAC Item metadata for each file belonging to a product (specified in Step 2). 
+   Product metadata describes a dataset as a whole. STAC Item metadata describes the actual dataset files. This is often the most time-consuming part of a contribution because each asset needs enough information to be usable: stable URL, title or meaningful id, description, temporal extent, spatial footprint and bounding box, file format and MIME type, license, and any useful extra fields (which can be customised).
 
-   - Use the workspace setup how-to guide if you want to work in the EarthCODE
-     Workspace with JupyterLab and the surrounding platform tooling.
+### Special Requests
 
-2. ** Create a new notebook ** to add project, product, workflow, and experiment metadata to your `open-science-catalog-metadata` fork.
+**If your data is NOT yet hosted online** (or does not have a stable URL):
+1. You still need to complete the project, product, workflow, experiment and produce file-level metadata. 
+2. Use the file name as a placeholder in the file URL field. (Provide an additional comment in your Pull Request describing this issue). The EarthCODE team will change it once the data is hosted online.
+3. Open the Pull Request (PR) against the open-science-metadata repository. 
+4. Email the earthcode team at earth-code@esa.int.
 
-   Start with the project because it is the top-level context for the
-   contribution. Then add the product or products that describe the datasets.
-   Add workflow metadata when code or processing logic should be published. Add
-   experiment metadata when a specific workflow execution generated a specific
-   product.
+**For STAC collections with more than 600 STAC Items:**
+1. Create a self-contained STAC Collection and add the Items to it.
+2. Open the Pull Request against the open-science-metadata repository.
+3. Package (zip) the self-contained STAC Collection and send it to the EarthCODE team (earth-code@esa.int).
+4. The EarthCODE team will assist in hosting the Collection and update the links.
 
+4. **Submit the Pull Request (PR).**
+   When the metadata is generated and validation passes:
+    * Commit your changes to your fork of the open-science-catalog-metadata repository. 
+    * Open a Pull Request against the main repository.
 
-3. Generate the STAC Items for each file in each product dataset you specified in step 2).
+The pull request should contain only the intended OSC metadata changes. It should include a clear title and description so the EarthCODE Data Steward team can understand what is being added or changed.
 
-   Product metadata describes the dataset as a whole. STAC Item metadata
-   describes the files that make up that dataset. This is often the most
-   time-consuming part of a contribution, because each asset needs enough
-   information to be usable: stable URL, title, description, timestamp, spatial
-   footprint, bounding box, MIME type, license, and any useful extra fields.
+After the Pull Request is opened, automatic checks validate the metadata. The EarthCODE Data Steward team reviews the contribution and may ask for corrections before merging it into the published catalogue.
 
-   The tutorials below show how to generate STAC Item metadata for the main supported file
-   formats. You will have to write your own code to generate STAC items for each file:
+### Tutorials
 
-   - Generate STAC Item metadata for `Zarr` data - `docs/tutorials/zarr_file_metadata.ipynb`.
-   - Generate STAC Item metadata for `COG` data - `docs/tutorials/zarr_file_metadata.ipynb`.
-   - Generate STAC Item metadata for `Parquet` data - `docs/tutorials/zarr_file_metadata.ipynb`.
+The following tutorials demonstrate with code different aspects of the Open Science Catalogue contribution process:
 
+* A complete end-to-end example showing how you can add a project, product, workflow, experiment, and product-file metadata to the Open Science Catalogue - `docs/tutorials/end_to_end_subglacial_lakes.ipynb`. 
+* Search and discovery: a tutorial on how to search existing OSC data so contributors can reuse existing projects, variables, EO missions, themes, and examples where appropriate - `docs/tutorials/earthcode_data_discovery.ipynb`.
+* How to generate STAC Item metadata for the main supported file formats:
+    * Generate STAC Item metadata for Zarr data - `docs/tutorials/zarr_file_metadata.ipynb`.
+    * Generate STAC Item metadata for COG data - `docs/tutorials/cog_file_metadata.ipynb`.
+    * Generate STAC Item metadata for Parquet data - `docs/tutorials/parquet_file_metadata.ipynb`.
 
-   > If your require the data to be hosted and it does not have a stable URL:
-      1. You still need to complete the project, product, workflow, experiment and file metadata steps.
-      2. However, change the file remote url to the filename. The earthcode team will change it once the data is hosted online.
-      3. Open the pull request with the OSC metadata. ( see below)
+### How-to guides
 
-   > If you have more than 600 files:
-     1. Create a self-contained STAC Collection and add the Items to it.
-     2. Open the pull request with the OSC metadata.
-     3. Zip the self-contained collection and send it to the EarthCODE team.
-     4. The EarthCODE team will host the collection and update the links
-
-5. Open a pull request.
-
-   When the metadata is generated and validation passes, open a pull request
-   against the main `open-science-catalog-metadata` repository.
-
-   The pull request should contain only the intended OSC metadata changes. It
-   should include a clear title and description so the EarthCODE Data Steward
-   team can understand what is being added or changed.
-
-   After the pull request is opened, automatic checks validate the metadata. The
-   Data Steward team reviews the contribution and may ask for corrections before
-   merging it into the published catalog.
-
-## Tutorials
-
-The tutorials demonstrate how the different pieces fit together with example data:
-
-- A complete worked example showing how a project, product, workflow,
-  experiment, and product-file metadata are contributed to the OSC - `docs/tutorials/end_to_end_subglacial_lakes.ipynb`. The script/notebook you create will look something like this.
-
-- A tutorial on how to search existing OSC data so contributors can reuse
-  existing projects, variables, EO missions, themes, and examples where
-  appropriate - `./tutorials/earthcode_data_discovery.ipynb`.
-
-- How to generate STAC Item metadata for the main supported file formats:
-   - Generate STAC Item metadata for `Zarr` data - `docs/tutorials/zarr_file_metadata.ipynb`.
-   - Generate STAC Item metadata for `COG` data - `docs/tutorials/cog_file_metadata.ipynb`.
-   - Generate STAC Item metadata for `Parquet` data - `docs/tutorials/parquet_file_metadata.ipynb`.
-
-
-## How-to guides
-
-How-to guides show how you can complete a specific task with your own data. You can start working through them in order if you like. You will have to combine different aspects of variaous how-to-guides in order to make a contribution.
+How-to guides show **how you can complete a specific task with your own data.** You can start working through them in order if you like. You will have to combine different aspects of various how-to-guides in order to make a contribution.
 
 The how-to guides include:
 
-- `docs/guides/0.Prerequisites-EarthCODE-Workspaces.ipynb` - how to setup the enviroment to run the rest of the notebooks and commit the results locally.
-- `docs/guides/Prerequisites-EarthCODE-Workspaces.ipynb` - how to setup the enviroment to run the rest of the notebooks and commit the results, using the EarthCODE workspace.
-- `docs/guides/1.Project.ipynb` create and validate project metadata.
-- `docs/guides/2.Product.ipynb` create and validate product metadata.
-- `docs/guides/3.Workflow.ipynb` create and validate workflow metadata.
-- `docs/guides/4.Experiment.ipynb` create and validate experiment metadata.
-- `docs/guides/5.Templates.ipynb` if you prefer the YAML-template workflow.
+* `docs/guides/0.Prerequisites-EarthCODE-Workspaces.ipynb` - how to setup the environment to run the rest of the notebooks and commit the results locally.
+* `docs/guides/Prerequisites-EarthCODE-Workspace.ipynb` - how to setup the environment to run the rest of the notebooks and commit the results, using the EarthCODE workspace.
+* `docs/guides/1.Project.ipynb` - create and validate **project** metadata.
+* `docs/guides/2.Product.ipynb` - create and validate **product** metadata.
+* `docs/guides/3.Workflow.ipynb` - create and validate **workflow** metadata.
+* `docs/guides/4.Experiment.ipynb` - create and validate **experiment** metadata.
+* `docs/guides/5.Templates.ipynb` - if you prefer the **YAML-template workflow.**
 
+### Next steps
 
-## Next steps
+Start contributing by:
 
-Start contributing by :
-1. Creating a local or remote enviroment
-2. Creating your own script or jupyter notebook to generate the metadata for your project, products, data files
-3. Opening a PR against the Open Science Catalog, to start the review process. OR email the earthcode team for support
+1. Creating a local or remote environment.
+2. Creating your own script or Jupyter notebook to generate the metadata for your project, products, and data files.
+3. Opening a PR against the Open Science Catalog to start the review process, OR email the earthcode team for support.
+
+### Looking for support?
+
+We are ready to assist you in case you have any questions, please use GitHub Issues or contact the team via e-mail: earth-code@esa.int.
+
+If you would like to request a specific feature, or have any question for the community of EarthCODE and library developers, please use the EarthCODE discourse forum.
