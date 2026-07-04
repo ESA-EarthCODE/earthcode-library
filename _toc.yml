@@ -6,8 +6,8 @@ parts:
       - file: docs/tutorials/earthcode_data_discovery
       - file: docs/tutorials/end_to_end_subglacial_lakes
       - file: docs/tutorials/cog_file_metadata_creation
-      - file: docs/tutorials/zarr_file_metadata_creation
-      - file: docs/tutorials/parquet_file_metadata_creation
+      - file: docs/tutorials/zarr_file_metadata
+      - file: docs/tutorials/parquet_file_metadata
   - caption: Guides
     chapters:
       - file: docs/guides/0.Prerequisites-EarthCODE-Workspaces
