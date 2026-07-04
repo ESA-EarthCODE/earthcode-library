@@ -1,19 +1,19 @@
 format: jb-book
-root: README
+root: docs/contributing_to_the_osc.md
 parts:
-  - caption: Guide
+  - caption: Tutorials
     chapters:
-      - file: guide/0.Prerequisites-EarthCODE-Workspaces
-      - file: guide/0.Prerequisites-local
-      - file: guide/1.Project
-      - file: guide/2.0.Product
-      - file: guide/2.1.Product_files_PRR
-      - file: guide/2.1.Product_files_self_hosted
-      - file: guide/3.Workflow
-      - file: guide/4.Experiment
-      - file: guide/5.Templates
-  - caption: Examples
+      - file: docs/tutorials/earthcode_data_discovery
+      - file: docs/tutorials/end_to_end_subglacial_lakes
+      - file: docs/tutorials/cog_file_metadata_creation
+      - file: docs/tutorials/zarr_file_metadata
+      - file: docs/tutorials/parquet_file_metadata
+  - caption: Guides
     chapters:
-      - file: examples/earthcode_data_discovery
-      - file: examples/contribute_via_pr_osc
-      - file: examples/contribute_via_osc_editor
+      - file: docs/guides/0.Prerequisites-EarthCODE-Workspaces
+      - file: docs/guides/0.Prerequisites-local
+      - file: docs/guides/1.Project
+      - file: docs/guides/2.0.Product
+      - file: docs/guides/3.Workflow
+      - file: docs/guides/4.Experiment
+      - file: docs/guides/5.Templates

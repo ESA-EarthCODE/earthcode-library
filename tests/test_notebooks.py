@@ -22,7 +22,7 @@ def catalog_root(tmp_path: Path) -> Path:
 def test_notebooks(catalog_root:Path):
 
     repo_root = Path(__file__).resolve().parents[1]
-    notebooks_dir = repo_root / "guide"
+    notebooks_dir = repo_root / "docs/guides/"
     unique = "123456"
     project_id = f"4datlantic-ohc{unique}"
     project_title = "4DAtlantic-OHC"
@@ -103,10 +103,8 @@ def test_notebooks(catalog_root:Path):
         "project_id": project_id,
         "project_title": project_title,
         "workflow_themes": ["oceans"],
-        "workflow_contracts_info": [("Magellium", "contact@magellium.fr")],
-        "codeurl": "https://github.com/ESA-EarthCODE/open-science-catalog-metadata",
+        "workflow_url": "https://github.com/ESA-EarthCODE/open-science-catalog-metadata",
         "workflow_doi": None,
-        "include_workflow_bbox": False,
         "include_workflow_time": False,
     }
 
@@ -120,47 +118,14 @@ def test_notebooks(catalog_root:Path):
         "experiment_formats": ["GeoTIFF"],
         "experiment_themes": ["oceans"],
         "experiment_input_parameters_link": "https://github.com/deepesdl/cube-gen",
-        "experiment_enviroment_link": "https://github.com/deepesdl/cube-gen",
+        "experiment_environment_link": "https://github.com/deepesdl/cube-gen",
         "workflow_id": workflow_id,
         "workflow_title": workflow_title,
         "product_id": product_id,
         "product_title": product_title,
         "experiment_contacts": None,
-        "include_experiment_bbox": False,
         "include_experiment_time": False,
-    }
-
-    prr_collection_params = {
-        "item_link" : "https://s3.waw4-1.cloudferro.com/EarthCODE/Catalogs/4datlantic-ohc/collection.json",
-        "documentation_link": "https://www.aviso.altimetry.fr/fileadmin/documents/data/tools/OHC-EEI/OHCATL-DT-035-MAG_EDD_V3.0.pdf",
-        "license_link": "https://www.aviso.altimetry.fr/fileadmin/documents/data/License_Aviso.pdf",
-        "access_link": "https://s3.waw4-1.cloudferro.com/EarthCODE/Catalogs/4datlantic-ohc/collection.json",
-        "product_id": product_id,
-        "catalog_root": str(catalog_root),
-    }
-
-    remote_item_params = {       
-        "item_title": product_title,
-        "item_id": f"{product_id}-zip_folder",
-        "item_bbox": [-180.0, -90.0, 180.0, 90.0],
-        "item_datetime": "2024-07-16T00:00:00Z",
-        "item_license": "CC-BY-4.0",
-        "item_description": (
-            "Dataset contents for notebook-run validation item."
-        ),
-        "item_data_url": "https://wgms.ch/downloads/GlaMBIE_Data_DOI_10.5904_wgms-glambie-2024-07.zip",
-        "item_data_mime_type": "application/zip",
-        "item_data_title": "GlaMBIE dataset archive (ZIP)",
-        "item_extra_fields": {
-            "file:size": 2726298,
-            "file:compression": "zip",
-            "data:format": "CSV inside ZIP",
-        },
-
-        "product_id": product_id,
-        "catalog_root": str(catalog_root),
-    }
-   
+    }   
 
     # execute notebooks, since each runs a validation on the entire catalog
     # we are also checking for newly introduced errors.
@@ -181,26 +146,6 @@ def test_notebooks(catalog_root:Path):
             input_path=str(notebooks_dir / "2.0.Product.ipynb"),
             output_path=None,
             parameters=product_params,
-            kernel_name="python3",
-            cwd=str(repo_root),
-            log_output=True,
-    )
-
-    # add PRR product items
-    pm.execute_notebook(
-            input_path=str(notebooks_dir / "2.1.Product_files_PRR.ipynb"),
-            output_path=None,
-            parameters=prr_collection_params,
-            kernel_name="python3",
-            cwd=str(repo_root),
-            log_output=True,
-    )
-
-    # add remote product items
-    pm.execute_notebook(
-            input_path=str(notebooks_dir / "2.1.Product_files_self_hosted.ipynb"),
-            output_path=None,
-            parameters=remote_item_params,
             kernel_name="python3",
             cwd=str(repo_root),
             log_output=True,
