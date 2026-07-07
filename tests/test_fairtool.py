@@ -16,6 +16,8 @@ def test_analyse_product():
         via_response_ok=True,
         child_response_ok=True,
         via_domain_ok=True,
+        has_access_example=True,
+        has_visualisation=False,
         child_domain_ok=True,
         asset_audit={
             "child_link": "https://s3.waw4-1.cloudferro.com/EarthCODE/Catalogs/waposal/collection.json",
@@ -87,9 +89,25 @@ def test_analyse_product():
 def test_transform():
     example = generate_example_product_analysis()
     res = product_audit_to_fair_dict(example)
-    expected = {'fair:file_access': True,'fair:file_acessible_files_rate': 1.0,'fair:file_cloud_assets_rate': 1.0,
-                'fair:product_approved_data_domain': True,'fair:product_approved_metadata_domain': True,
-                'fair:product_has_documentation': True, 'fair:product_has_doi': True,
-                'fair:product_url_resolves': True, 'fair:workflow_exists': False
+    expected = {'fair:Findable_has_doi': True,
+                'fair:Findable_rich_metadata': True,
+                'fair:Findable_identifier': True,
+                'fair:Findable_stac_assets': True,
+                'fair:Findable_indexed': True,
+                'fair:Findable_indexed_approved_metadata': True,
+                'fair:Findable_indexed_approved_data': True,
+                'fair:Accessible_general': True,
+                'fair:Accessible_protocols': True,
+                'fair:Accessible_files': 1.0,
+                'fair:Interoperable_uses_formal_language': True,
+                'fair:Interoperable_controlled_vocabularies': True,
+                'fair:Interoperable_related_links': True,
+                'fair:Interoperable_has_documentation': True,
+                'fair:Reusable_rich_descriptions': True,
+                'fair:Reusable_has_license': True,
+                'fair:Reusable_workflow_exists': False,
+                'fair:Reusable_cloud_assets_rate': 1.0,
+                'fair:Reusable_has_visualisation': False,
+                'fair:Reusable_has_access_example': True
                 }
     assert res == expected

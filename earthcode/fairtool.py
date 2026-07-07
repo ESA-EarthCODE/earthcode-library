@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 
 from __future__ import annotations
 
@@ -14,6 +13,7 @@ import pystac
 
 from dataclasses import dataclass, field
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple, Union, Any
+from pathlib import Path
 
 from fsspec.implementations.http import HTTPFileSystem
 from zarr.storage import ZipStore
@@ -74,16 +74,37 @@ CLOUD_NATIVE_FORMATS = set([
     "application/vnd+zarr"
 ])
 
-fair_descriptions =  {
-    "fair:product_url_resolves": "Test whether the dataset URL resolves successfully.",
-    "fair:product_has_doi": "Test whether the the dataset has an associated DOI.",
-    "fair:product_has_documentation": "Test whether the the dataset has documentation .",
-    "fair:product_approved_metadata_domain": "Test whether the metadata is hosted on an approved domain.",
-    "fair:product_approved_data_domain": "Test whether the data is hosted on an approved domain.",
-    "fair:file_access": "Test whether the metadata has per-file metadata, or if the data is a raw dump.",
-    "fair:file_acessible_files_rate": "Percent of assets that could be opened in tests.",
-    "fair:file_cloud_assets_rate": "Percent of assets that are in cloud-optimised format.",
-    "fair:workflow_exists": "Dataset has associated workflow."
+fair_descriptions = {
+
+    # --- FINDABLE ---
+    "fair:Findable_has_doi": "F1 — The dataset has an associated globally unique, persistent DOI.",
+    "fair:Findable_rich_metadata": "F2 — The metadata is richly described using the OSC extension.",
+    "fair:Findable_identifier": "F3 — The metadata clearly and explicitly include the identifier of the data it describes",
+    "fair:Findable_stac_assets": "F3.1 — The metadata has per-file STAC items or assets that explicitly include the identifier of the data it describes.",
+    "fair:Findable_indexed": "F4 — The (meta)data are registered or indexed in a searchable resource.",
+    "fair:Findable_indexed_approved_metadata": "F4.1 — The metadata are registered or indexed in an approved domain.",
+    "fair:Findable_indexed_approved_data": "F4.2 — The data are registered or indexed in an approved domain.",
+
+    # --- ACCESSIBLE ---
+    "fair:Accessible_general": "A1 —  Metadata are accessible over HTTPS via STAC API, OGC CSW (2.0.2/3.0.0), OpenSearch, OAI-PMH, or SRU.",
+    "fair:Accessible_protocols": "A1.1 — Protocols are open, free, and universally implementable.",
+    "fair:Accessible_files": "A1.2 — The percentage of randomly chosen assets that were successfully opened programatically.",
+    "fair:Accessible_metadata": "A2 — Metadata are accessible, even when the data are no longer available",
+
+    # --- INTEROPERABLE ---
+    "fair:Interoperable_uses_formal_language": "I1 — The metadata uses formal, accessible representation languages (e.g., JSON in STAC).",
+    "fair:Interoperable_controlled_vocabularies": "I2 — The dataset adopts controlled FAIR vocabularies aligned with CF Standard Names and GCMD Keywords via the STAC OSC extension.",
+    "fair:Interoperable_related_links": "I3 — The dataset has qualified links to related projects, experiments, themes, and variables.",
+    "fair:Interoperable_has_documentation": "I3 — The dataset has additional information such as guides, research papers and others.",
+
+    # --- REUSABLE ---
+    "fair:Reusable_rich_descriptions": "R1 — The dataset provides rich, domain-appropriate descriptions about variables, themes, and spatial/temporal extent.",
+    "fair:Reusable_has_license": "R1.1 — The products are published with clear, standardized licenses.",
+    "fair:Reusable_workflow_exists": "R1.2 — The dataset has an associated workflow to record processing provenance.",
+    "fair:Reusable_cloud_assets_rate": "R1.3 — The percentage of assets that align with community standards by being in cloud-native formats (e.g., Zarr, COG, GeoParquet).",
+    "fair:Reusable_has_visualisation": "R1.4 — The dataset has an associated visualisation dashboard, notebooks or tools.",
+    "fair:Reusable_has_access_example": "R1.5 — The dataset has an associated access example script or notebook.",
+
 }
 
 
@@ -102,6 +123,8 @@ class ProductAuditResult:
     has_doc: bool
     has_workflow: bool
     has_doi: bool
+    has_visualisation : bool
+    has_access_example: bool
     
     # Validation Results (Access)
     via_response_ok: bool
@@ -239,7 +262,7 @@ def check_asset_readable(href: str, mime_type: Optional[str], is_prr: bool) -> b
                 _load_zip_zarr(test_href)
                 return True
             if mtype == "application/x-netcdf":
-                xarray.open_dataset(test_href + "#mode=bytes")  # type: ignore
+                xarray.open_dataset(test_href + "#mode=bytes", decode_cf=False, decode_times=False, decode_coords=False, decode_timedelta=False)
                 return True
             if reader:
                 reader(test_href)  # type: ignore
@@ -272,7 +295,7 @@ def analyse_product(
     Analyzes a single product (Item or Collection) entirely.
     
     Performs:
-    1. Metadata extraction (links, docs, workflow)
+    1. Metadata extraction (links, docs, workflow, visualisation, example)
     2. Responsiveness checks (HTTP HEAD on via/child)
     3. Domain validation
     4. Asset sampling and reading tests
@@ -298,17 +321,44 @@ def analyse_product(
         if link.rel == "related" and isinstance(title, str) and "Experiment: " in title:
             has_workflow = True
 
+    
+    # check visualisation is present and accessible
+    vis_link = productCollection.get_single_link("visualisation")
+    vis_href = vis_link.href if vis_link else None
+
+    # check access example notebook is present and accessible
+    example_link = productCollection.get_single_link("example")
+    example_href = example_link.href if example_link else None
+
     # 3. Check DOI
     has_doi = check_product_doi(productCollection, timeout=timeout)
 
-    # 4. Check Response Status (Access)
+    # 4. Check Response Status 
+    # (Access)
     via_ok = False
     if via_href:
         try:
             via_ok = try_response(via_href, timeout=timeout).status_code == 200
         except requests.RequestException:
             via_ok = False
+    
+    # (Visualisation)
+    vis_ok = False
+    if vis_href:
+        try:
+            vis_ok = try_response(vis_href, timeout=timeout).status_code == 200
+        except requests.RequestException:
+            vis_ok = False
+    
+    # Example
+    example_ok = False
+    if example_href:
+        try:
+            example_ok = try_response(example_href, timeout=timeout).status_code == 200
+        except requests.RequestException:
+            example_ok = False
 
+    # Child
     child_ok = False
     if child_href:
         try:
@@ -373,6 +423,8 @@ def analyse_product(
         has_doc=has_doc,
         has_workflow=has_workflow,
         has_doi=has_doi,
+        has_visualisation=vis_ok,
+        has_access_example=example_ok,
         via_response_ok=via_ok,
         child_response_ok=child_ok,
         via_domain_ok=via_domain_ok,
@@ -384,6 +436,7 @@ def analyse_product(
 def product_audit_to_fair_dict(result: ProductAuditResult):
     """
     Converts a ProductAuditResult object into a dictionary with specific 'fair:' keys.
+    Some checks are true by default, since the OSC validator guarantees them.
     """
     
     # Extract success rate safely; default to 0.0 or None if no audit occurred
@@ -393,17 +446,35 @@ def product_audit_to_fair_dict(result: ProductAuditResult):
 
     return {
         
-        "fair:product_url_resolves": result.via_response_ok,
-        "fair:product_has_doi": result.has_doi,
-        "fair:product_has_documentation": result.has_doc,
-        "fair:product_approved_metadata_domain": result.child_domain_ok,
-        "fair:product_approved_data_domain": result.via_domain_ok,
-        
-        "fair:file_access": result.child_response_ok,
-        "fair:file_acessible_files_rate": accessible_files_rate,
-        "fair:file_cloud_assets_rate": result.cloud_score,
-        
-        "fair:workflow_exists": result.has_workflow,
+        # --- FINDABLE ---
+        "fair:Findable_has_doi": result.has_doi,
+        "fair:Findable_rich_metadata": True,
+        "fair:Findable_identifier": True,
+        "fair:Findable_stac_assets": result.child_response_ok,
+        "fair:Findable_indexed": True,
+        "fair:Findable_indexed_approved_metadata": result.child_domain_ok,
+        "fair:Findable_indexed_approved_data": result.via_domain_ok,
+
+        # --- ACCESSIBLE ---
+        "fair:Accessible_general": True,
+        "fair:Accessible_protocols": True,
+        "fair:Accessible_files": accessible_files_rate,
+
+        # --- INTEROPERABLE ---
+        "fair:Interoperable_uses_formal_language": True,
+        "fair:Interoperable_controlled_vocabularies": True,
+        "fair:Interoperable_related_links": True,
+        "fair:Interoperable_has_documentation": result.has_doc,
+
+        # --- REUSABLE ---
+        "fair:Reusable_rich_descriptions": True,
+        "fair:Reusable_has_license": True,
+        "fair:Reusable_workflow_exists": result.has_workflow,
+        "fair:Reusable_cloud_assets_rate": result.cloud_score,
+        "fair:Reusable_has_visualisation": result.has_visualisation,
+        "fair:Reusable_has_access_example": result.has_access_example,
+
+
     }
 
 
@@ -498,6 +569,8 @@ def generate_example_product_analysis():
         child_response_ok=True,
         via_domain_ok=True,
         child_domain_ok=True,
+        has_access_example=True,
+        has_visualisation=False,
         asset_audit={
             "child_link": "https://s3.waw4-1.cloudferro.com/EarthCODE/Catalogs/waposal/collection.json",
             "is_prr": False,
@@ -560,18 +633,22 @@ def generate_example_product_analysis():
         cloud_score=1.0,
     )
 
-if __name__ == "__main__":
-    # Basic CLI wrapper for testing
-    parser = argparse.ArgumentParser()
-    parser.add_argument("catalog_path", help="Path or URL to catalog.json")
-    parser.add_argument("--max-checks", type=int, default=10, help="Max assets to sample per product")
-    parser.add_argument("--timeout", type=int, default=5, help="HTTP timeout in seconds")
+
+def add_fairtool_results_to_product(product_collection_path):
+    pystac.set_stac_version('1.0.0')
+    product_dir = Path(product_collection_path)
+
+    # read the product data and update with the fairtool results
+    with open(product_dir, 'r', encoding='utf-8') as f:
+        product_collection = json.load(f)
+        product = pystac.Collection.from_dict(product_collection,
+                                            migrate=False,
+                                            root=None,
+                                            preserve_dict=True)
+        result = analyse_product(product, seed=123)
+        result_dict = product_audit_to_fair_dict(result)
+        product = product.to_dict(include_self_link=False, transform_hrefs=True)
+        for k,v in result_dict.items():
+            product[k] = v
     
-    args = parser.parse_args()
-    
-    try:
-        report = run_audit(args.catalog_path, max_checks=args.max_checks, timeout=args.timeout)
-        print(json.dumps(report, indent=2, default=str))
-    except Exception as e:
-        logging.error("Audit failed: %s", e)
-        sys.exit(1)
+    return product
