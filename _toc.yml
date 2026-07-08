@@ -17,3 +17,4 @@ parts:
       - file: docs/guides/3.Workflow
       - file: docs/guides/4.Experiment
       - file: docs/guides/5.Templates
+      - file: docs/fairtool
