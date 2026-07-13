@@ -253,17 +253,18 @@ def sample_assets(
 
 def check_asset_readable(href: str, mime_type: Optional[str], is_prr: bool) -> bool:
     mtype = mime_type or ""
-    reader = READERS.get(mtype)
+    base_mtype = mtype.split(";", 1)[0].strip()
+    reader = READERS.get(mtype) or READERS.get(base_mtype)
 
     try:
         test_href = href
         if is_prr:
             if not href.startswith("https://eoresults.esa.int/"):
                 test_href = "https://eoresults.esa.int/" + href.lstrip("/")
-            if mtype == "application/vnd+zarr":
+            if base_mtype == "application/vnd+zarr":
                 _load_zip_zarr(test_href)
                 return True
-            if mtype == "application/x-netcdf":
+            if base_mtype == "application/x-netcdf":
                 xarray.open_dataset(test_href + "#mode=bytes", decode_cf=False, decode_times=False, decode_coords=False, decode_timedelta=False)
                 return True
             if reader:
@@ -272,7 +273,7 @@ def check_asset_readable(href: str, mime_type: Optional[str], is_prr: bool) -> b
             return False
 
         # non-PRR
-        if mtype == "application/x-netcdf":
+        if base_mtype == "application/x-netcdf":
             test_href = href + "#mode=bytes"
         if reader is None:
             return False
