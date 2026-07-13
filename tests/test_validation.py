@@ -203,14 +203,14 @@ def test_item_add(catalog_root: Path):
     assert len(errors) == 0
 
 
-def test_add_link_if_missing():
+def test_add_link_if_missing(catalog_root: Path):
 
     product_id = 'glambie-dataset'
     itemid = f"{product_id}-zip_folder"
     data_title = "GlaMBIE dataset archive (ZIP)"
 
     # add to product collection if not already existing
-    with open(SOURCE_CATALOG / f'products/{product_id}/collection.json', encoding='utf-8') as f:
+    with open(catalog_root / f'products/{product_id}/collection.json', encoding='utf-8') as f:
 
         existing_product_collection = json.load(f)
         existing_product_collection = pystac.Collection.from_dict(existing_product_collection,

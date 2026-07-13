@@ -253,18 +253,22 @@ def sample_assets(
 
 def check_asset_readable(href: str, mime_type: Optional[str], is_prr: bool) -> bool:
     mtype = mime_type or ""
-    base_mtype = mtype.split(";", 1)[0].strip()
-    reader = READERS.get(mtype) or READERS.get(base_mtype)
+    mtype_lower = mtype.lower()
+    matched_mtype = next(
+        (known_mtype for known_mtype in READERS if known_mtype.lower() in mtype_lower),
+        None,
+    )
+    reader = READERS.get(matched_mtype) if matched_mtype else None
 
     try:
         test_href = href
         if is_prr:
             if not href.startswith("https://eoresults.esa.int/"):
                 test_href = "https://eoresults.esa.int/" + href.lstrip("/")
-            if base_mtype == "application/vnd+zarr":
+            if matched_mtype == "application/vnd+zarr":
                 _load_zip_zarr(test_href)
                 return True
-            if base_mtype == "application/x-netcdf":
+            if matched_mtype == "application/x-netcdf":
                 xarray.open_dataset(test_href + "#mode=bytes", decode_cf=False, decode_times=False, decode_coords=False, decode_timedelta=False)
                 return True
             if reader:
@@ -273,7 +277,7 @@ def check_asset_readable(href: str, mime_type: Optional[str], is_prr: bool) -> b
             return False
 
         # non-PRR
-        if base_mtype == "application/x-netcdf":
+        if matched_mtype == "application/x-netcdf":
             test_href = href + "#mode=bytes"
         if reader is None:
             return False
@@ -407,7 +411,7 @@ def analyse_product(
             # Calculate Cloud Score
             # Score 1 if format is cloud native, else 0. Average over checked assets.
             if subset:
-                cn_scores = [1 if t in CLOUD_NATIVE_FORMATS else 0 for (_, t) in subset]
+                cn_scores = [1 if any(t.strip() in CLOUD_NATIVE_FORMATS for t in t.split(";", 1)) else 0 for (_, t) in subset]
                 cloud_score = sum(cn_scores) / len(cn_scores)
 
         except Exception as e:
