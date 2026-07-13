@@ -647,9 +647,10 @@ def add_fairtool_results_to_product(product_collection_path):
                                             migrate=False,
                                             root=None,
                                             preserve_dict=True)
+        product.set_self_href(str(product_dir.resolve()))
         result = analyse_product(product, seed=123)
         result_dict = product_audit_to_fair_dict(result)
-        product = product.to_dict(include_self_link=False, transform_hrefs=True)
+        product = product_collection.copy()
         for k,v in result_dict.items():
             product[k] = v
     
