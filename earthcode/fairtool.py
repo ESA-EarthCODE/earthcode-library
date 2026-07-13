@@ -7,6 +7,7 @@ import logging
 import random
 import sys
 import fnmatch
+from itertools import islice
 from urllib.parse import urlparse
 import requests
 import pystac
@@ -226,7 +227,7 @@ def load_items_from_child_link(link: str, max_items: int = 1000) -> Tuple[bool, 
         items = pystac.ItemCollection.from_file(link + "/items?limit=" + str(max_items))
     else:
         stac_obj = pystac.STACObject.from_file(link)
-        items = pystac.ItemCollection([next(stac_obj.get_items(recursive=True)) for _ in range(max_items)])
+        items = pystac.ItemCollection(islice(stac_obj.get_items(recursive=True), max_items))
     
     items_dict = items.to_dict()
     out: List[Tuple[str, Optional[str]]] = []
@@ -382,7 +383,7 @@ def analyse_product(
 
     if child_href:
         try:
-            is_prr, assets = load_items_from_child_link(child_href, max_items=max_asset_checks*10)
+            is_prr, assets = load_items_from_child_link(child_href)
             
             # Default assumption: assume NetCDF when type is missing
             assets_norm: List[Tuple[str, Optional[str]]] = [
