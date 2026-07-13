@@ -71,8 +71,12 @@ DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/
 
 CLOUD_NATIVE_FORMATS = set([
     "application/vnd.apache.geoparquet",
+    "application/geoparquet",
     "image/cog",
-    "application/vnd+zarr"
+    "image/tiff",
+    "application/vnd+zarr",
+    "application/x-zarr",
+    "profile=cloud-optimized",
 ])
 
 fair_descriptions = {
