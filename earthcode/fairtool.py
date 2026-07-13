@@ -219,13 +219,14 @@ def get_resolve_href(feat, asset):
         root_url = root_href[0: root_href[scheme:].index('/') + scheme]
         return root_url + asset['href']
 
-def load_items_from_child_link(link: str) -> Tuple[bool, List[Tuple[str, Optional[str]]]]:
+def load_items_from_child_link(link: str, max_items: int = 1000) -> Tuple[bool, List[Tuple[str, Optional[str]]]]:
     prr = _is_prr(link)
     
     if prr:
-        items = pystac.ItemCollection.from_file(link + "/items?limit=10000")
+        items = pystac.ItemCollection.from_file(link + "/items?limit=" + str(max_items))
     else:
-        items = pystac.ItemCollection(pystac.STACObject.from_file(link).get_all_items())
+        stac_obj = pystac.STACObject.from_file(link)
+        items = pystac.ItemCollection([next(stac_obj.get_items(recursive=True)) for _ in range(max_items)])
     
     items_dict = items.to_dict()
     out: List[Tuple[str, Optional[str]]] = []
@@ -381,7 +382,7 @@ def analyse_product(
 
     if child_href:
         try:
-            is_prr, assets = load_items_from_child_link(child_href)
+            is_prr, assets = load_items_from_child_link(child_href, max_items=max_asset_checks*10)
             
             # Default assumption: assume NetCDF when type is missing
             assets_norm: List[Tuple[str, Optional[str]]] = [
