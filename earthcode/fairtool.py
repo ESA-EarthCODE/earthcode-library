@@ -13,7 +13,7 @@ import requests
 import pystac
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Mapping, Optional, Sequence, Tuple, Union, Any
+from typing import Dict, List, Mapping, Optional, Sequence, Tuple, TypeVar, Union, Any
 from pathlib import Path
 
 from fsspec.implementations.http import HTTPFileSystem
@@ -23,14 +23,42 @@ import rioxarray
 import xarray
 import geopandas as gpd
 import pandas as pd
+import pyarrow.parquet as pq
 import zipfile
 import csv
+
+
+def _read_parquet_first_row_group(href: str):
+    """Read one row group to verify that a Parquet asset is accessible."""
+    if urlparse(href).scheme in {"http", "https"}:
+        fs = HTTPFileSystem(asynchronous=False)
+        try:
+            with fs.open(href, "rb") as parquet_file:
+                return pq.ParquetFile(parquet_file).read_row_group(0)
+        except ValueError as exc:
+            if "Cannot seek streaming HTTP file" not in str(exc):
+                raise
+            response = requests.head(href, allow_redirects=True, timeout=30)
+            response.raise_for_status()
+            size_header = response.headers.get("Content-Length")
+            if size_header is None:
+                raise
+
+            with fs.open(href, "rb", size=int(size_header)) as parquet_file:
+                return pq.ParquetFile(parquet_file).read_row_group(0)
+
+    return pq.ParquetFile(href).read_row_group(0)
+
+
+def _open_zarr_without_time_decoding(href: str):
+    return xarray.open_zarr(href, decode_times=False)
 
 
 READERS = {
     # xarray
     "application/x-netcdf": xarray.open_dataset,
-    "application/vnd+zarr": xarray.open_zarr,
+    "application/vnd+zarr": _open_zarr_without_time_decoding,
+    "application/x-zarr": _open_zarr_without_time_decoding,
 
     # rioxarray
     "image/tiff": rioxarray.open_rasterio,
@@ -38,16 +66,15 @@ READERS = {
 
     # Python standard libs
     "application/zip": zipfile.ZipFile,
-    "application/pdf": open,
-    "text/plain": open,
 
     # pandas
-    "text/csv": pd.read_csv,
-    "application/vnd.apache.parquet": pd.read_parquet,
+    "application/x-parquet": _read_parquet_first_row_group,
+    "application/vnd.apache.parquet": _read_parquet_first_row_group,
 
     # geopandas
     "application/x-shapefile": gpd.read_file,
-    "application/vnd.apache.geoparquet": gpd.read_parquet,
+    "application/vnd.apache.geoparquet": _read_parquet_first_row_group,
+    "application/geoparquet": _read_parquet_first_row_group,
     "application/geo+json": gpd.read_file,
 }
 
@@ -70,6 +97,8 @@ APPROVED_METADATA_HOSTING_DOMAINS = [
 DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
 
 CLOUD_NATIVE_FORMATS = set([
+    "application/x-parquet",
+    "application/vnd.apache.parquet",
     "application/vnd.apache.geoparquet",
     "application/geoparquet",
     "image/cog",
@@ -233,6 +262,9 @@ def load_items_from_child_link(link: str, max_items: int = 1000) -> Tuple[bool, 
         stac_obj = pystac.STACObject.from_file(link)
         items = pystac.ItemCollection(islice(stac_obj.get_items(recursive=True), max_items))
     
+    return prr, get_data_assets(items)
+
+def get_data_assets(items: pystac.ItemCollection) -> List[Tuple[str, Optional[str]]]:
     items_dict = items.to_dict()
     out: List[Tuple[str, Optional[str]]] = []
     
@@ -242,13 +274,23 @@ def load_items_from_child_link(link: str, max_items: int = 1000) -> Tuple[bool, 
             if a.get("roles") == ["data"]:
                 out.append((get_resolve_href(feat, a), a.get("type")))
 
-    return prr, out
+    return out
+
+def load_items_from_collection(
+    collection: Union[pystac.Item, pystac.Collection],
+    max_items: int = 1000,
+) -> Tuple[bool, List[Tuple[str, Optional[str]]]]:
+    items = pystac.ItemCollection(islice(collection.get_items(), max_items))
+    return False, get_data_assets(items)
+
+AssetT = TypeVar("AssetT")
+
 
 def sample_assets(
-    assets: Sequence[Tuple[str, Optional[str]]],
+    assets: Sequence[AssetT],
     max_checks: int,
     seed: Optional[int] = None,
-) -> List[Tuple[str, Optional[str]]]:
+) -> List[AssetT]:
     if seed is not None:
         random.seed(seed)
     if len(assets) <= max_checks:
@@ -269,8 +311,8 @@ def check_asset_readable(href: str, mime_type: Optional[str], is_prr: bool) -> b
         if is_prr:
             if not href.startswith("https://eoresults.esa.int/"):
                 test_href = "https://eoresults.esa.int/" + href.lstrip("/")
-            if matched_mtype == "application/vnd+zarr":
-                _load_zip_zarr(test_href)
+            if matched_mtype in {"application/vnd+zarr", "application/x-zarr"}:
+                _load_zip_zarr(test_href, decode_times=False)
                 return True
             if matched_mtype == "application/x-netcdf":
                 xarray.open_dataset(test_href + "#mode=bytes", decode_cf=False, decode_times=False, decode_coords=False, decode_timedelta=False)
@@ -319,8 +361,13 @@ def analyse_product(
     via_link = productCollection.get_single_link("via")
     via_href = via_link.href if via_link else None
 
-    child_link = productCollection.get_single_link("child")
-    child_href = child_link.href if child_link else None
+    child_links = productCollection.get_links("child")
+    child_href = child_links[0].href if child_links else None
+
+    direct_item_links = productCollection.get_links("item")
+    asset_source_href = child_href
+    if asset_source_href is None and direct_item_links:
+        asset_source_href = productCollection.get_self_href()
 
     # 2. Check Documentation / Workflow
     has_doc = False
@@ -371,9 +418,9 @@ def analyse_product(
 
     # Child
     child_ok = False
-    if child_href:
+    if asset_source_href:
         try:
-            child_ok = try_response(child_href, timeout=timeout).status_code == 200
+            child_ok = try_response(asset_source_href, timeout=timeout).status_code == 200
         except requests.RequestException:
             child_ok = False
 
@@ -383,31 +430,39 @@ def analyse_product(
         via_domain_ok = check_domain(via_href, APPROVED_DATA_HOSTING_DOMAINS)
         
     child_domain_ok = False
-    if child_href:
-        child_domain_ok = check_domain(child_href, APPROVED_METADATA_HOSTING_DOMAINS)
+    if asset_source_href:
+        child_domain_ok = check_domain(asset_source_href, APPROVED_METADATA_HOSTING_DOMAINS)
 
     # 6. Asset Audit (Child link traversal)
     asset_audit = None
     cloud_score = 0.0
 
-    if child_href:
+    if asset_source_href:
         try:
-            is_prr, assets = load_items_from_child_link(child_href)
-            
+            assets: List[Tuple[str, Optional[str], bool]] = []
+            for link in child_links:
+                child_is_prr, child_assets = load_items_from_child_link(link.href)
+                assets.extend((href, mtype, child_is_prr) for href, mtype in child_assets)
+
+            if direct_item_links:
+                _, direct_assets = load_items_from_collection(productCollection)
+                assets.extend((href, mtype, False) for href, mtype in direct_assets)
+
             # Default assumption: assume NetCDF when type is missing
-            assets_norm: List[Tuple[str, Optional[str]]] = [
-                (href, mtype if mtype is not None else "application/x-netcdf")
-                for (href, mtype) in assets
+            assets_norm: List[Tuple[str, str, bool]] = [
+                (href, mtype if mtype is not None else "application/x-netcdf", is_prr)
+                for (href, mtype, is_prr) in assets
             ]
 
             subset = sample_assets(assets_norm, max_checks=max_asset_checks, seed=seed)
-            successes = [check_asset_readable(h, t, is_prr) for (h, t) in subset]
+            successes = [check_asset_readable(h, t, is_prr) for (h, t, is_prr) in subset]
+            audit_is_prr = all(is_prr for _, _, is_prr in subset) if subset else False
             
             # Calculate Asset Stats
             asset_audit = {
-                "child_link": child_href,
-                "is_prr": is_prr,
-                "checked": [{"href": h, "type": t} for (h, t) in subset],
+                "child_link": asset_source_href,
+                "is_prr": audit_is_prr,
+                "checked": [{"href": h, "type": t} for (h, t, _) in subset],
                 "success_flags": successes,
                 "success_rate": (sum(successes) / len(successes)) if subset else None,
             }
@@ -415,12 +470,12 @@ def analyse_product(
             # Calculate Cloud Score
             # Score 1 if format is cloud native, else 0. Average over checked assets.
             if subset:
-                cn_scores = [1 if any(t.strip() in CLOUD_NATIVE_FORMATS for t in t.split(";", 1)) else 0 for (_, t) in subset]
+                cn_scores = [1 if any(t.strip() in CLOUD_NATIVE_FORMATS for t in t.split(";", 1)) else 0 for (_, t, _) in subset]
                 cloud_score = sum(cn_scores) / len(cn_scores)
 
         except Exception as e:
             asset_audit = {
-                "child_link": child_href,
+                "child_link": asset_source_href,
                 "error": f"Failed to load items: {e}",
                 "checked": [],
                 "success_flags": [],
@@ -541,10 +596,10 @@ def run_audit(
             num_products_with_child += 1
             child_responses[result.product_id] = result.child_response_ok
             metadata_domain_ok[result.product_id] = result.child_domain_ok
-            
-            if result.asset_audit:
-                per_child_asset_checks[result.product_id] = result.asset_audit
-                cloud_assets_score[result.product_id] = result.cloud_score
+
+        if result.asset_audit:
+            per_child_asset_checks[result.product_id] = result.asset_audit
+            cloud_assets_score[result.product_id] = result.cloud_score
 
         has_doc_map[result.product_id] = result.has_doc
         has_workflow_map[result.product_id] = result.has_workflow
