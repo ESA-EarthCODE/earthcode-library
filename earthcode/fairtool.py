@@ -92,6 +92,7 @@ APPROVED_METADATA_HOSTING_DOMAINS = [
     "*.esa.int",
     "s3.waw4-1.cloudferro.com",
     "*.github.org",
+    "esa-earthcode.github.io",
 ]
 
 DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
@@ -368,6 +369,7 @@ def analyse_product(
     asset_source_href = child_href
     if asset_source_href is None and direct_item_links:
         asset_source_href = productCollection.get_self_href()
+        child_href = asset_source_href
 
     # 2. Check Documentation / Workflow
     has_doc = False
@@ -424,10 +426,8 @@ def analyse_product(
         except requests.RequestException:
             child_ok = False
 
-    # 5. Check Domains
+    # 5. Check metadata domain; data domains are checked after asset sampling.
     via_domain_ok = False
-    if via_href:
-        via_domain_ok = check_domain(via_href, APPROVED_DATA_HOSTING_DOMAINS)
         
     child_domain_ok = False
     if asset_source_href:
@@ -455,6 +455,12 @@ def analyse_product(
             ]
 
             subset = sample_assets(assets_norm, max_checks=max_asset_checks, seed=seed)
+            # The data-hosting flag describes every sampled asset, not the via page.
+            # An empty sample provides no evidence of approved data hosting.
+            via_domain_ok = bool(subset) and all(
+                check_domain(href, APPROVED_DATA_HOSTING_DOMAINS)
+                for href, _, _ in subset
+            )
             successes = [check_asset_readable(h, t, is_prr) for (h, t, is_prr) in subset]
             audit_is_prr = all(is_prr for _, _, is_prr in subset) if subset else False
             

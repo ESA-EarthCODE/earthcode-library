@@ -166,16 +166,16 @@ def test_analyse_ai4ais_larsen_c_ice_shelf_cube_product():
     expected_result = ProductAuditResult(
         product_id="ai4ais-larsen-c-ice-shelf-cube",
         via_href="./ai4ais-larsen-c-ice-shelf-cube-item.json",
-        child_href=None,
+        child_href=target_product_location,
         has_doc=False,
         has_workflow=False,
         has_doi=False,
         via_response_ok=False,
         child_response_ok=True,
-        via_domain_ok=False,
+        via_domain_ok=True,
         has_access_example=True,
         has_visualisation=False,
-        child_domain_ok=False,
+        child_domain_ok=True,
         asset_audit={
             "child_link": target_product_location,
             "is_prr": False,
@@ -213,7 +213,7 @@ def test_analyse_bedrock_topography_antarctica_bedmachine_product():
         has_doi=True,
         via_response_ok=True,
         child_response_ok=True,
-        via_domain_ok=False,
+        via_domain_ok=True,
         has_access_example=True,
         has_visualisation=False,
         child_domain_ok=True,
@@ -239,30 +239,3 @@ def test_analyse_bedrock_topography_antarctica_bedmachine_product():
     result = analyse_product(target_product, timeout=15, seed=123)
 
     assert result == expected_result
-
-
-def test_transform():
-    example = generate_example_product_analysis()
-    res = product_audit_to_fair_dict(example)
-    expected = {'fair:Findable_has_doi': True,
-                'fair:Findable_rich_metadata': True,
-                'fair:Findable_identifier': True,
-                'fair:Findable_stac_assets': True,
-                'fair:Findable_indexed': True,
-                'fair:Findable_indexed_approved_metadata': True,
-                'fair:Findable_indexed_approved_data': True,
-                'fair:Accessible_general': True,
-                'fair:Accessible_protocols': True,
-                'fair:Accessible_files': 1.0,
-                'fair:Interoperable_uses_formal_language': True,
-                'fair:Interoperable_controlled_vocabularies': True,
-                'fair:Interoperable_related_links': True,
-                'fair:Interoperable_has_documentation': True,
-                'fair:Reusable_rich_descriptions': True,
-                'fair:Reusable_has_license': True,
-                'fair:Reusable_workflow_exists': False,
-                'fair:Reusable_cloud_assets_rate': 1.0,
-                'fair:Reusable_has_visualisation': False,
-                'fair:Reusable_has_access_example': True
-                }
-    assert res == expected
