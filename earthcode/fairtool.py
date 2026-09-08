@@ -8,7 +8,7 @@ import random
 import sys
 import fnmatch
 from itertools import islice
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 import requests
 import pystac
 
@@ -242,17 +242,20 @@ def _load_zip_zarr(url: str, **kwargs):
     return open_datatree(store, engine="zarr", **kwargs)
 
 def get_resolve_href(feat, asset):
+    """Resolve asset URLs using the item's self link and STAC storage metadata."""
+    href = asset["href"]
+    if urlparse(href).scheme == "s3":
+        schemes = feat.get("properties", {}).get("storage:schemes", {})
+        for ref in asset.get("storage:refs", []):
+            endpoint = schemes.get(ref, {}).get("platform", "")
+            if urlparse(endpoint).scheme in {"http", "https"}:
+                return endpoint.rstrip("/") + "/" + href[len("s3://"):]
+        # S3 URLs do not identify the provider; do not guess a custom endpoint.
+        return href
 
-    # check for cloudferro assets
-    if asset['href'].startswith('s3://'):
-            return 'https://s3.waw4-1.cloudferro.com/' + asset['href']  
-    elif asset['href'][0] != '/':
-            return asset['href']
-    else:
-        root_href = feat['links'][0]['href']
-        scheme = root_href.index('//') + 2
-        root_url = root_href[0: root_href[scheme:].index('/') + scheme]
-        return root_url + asset['href']
+    base = next((link["href"] for link in feat.get("links", [])
+                 if link.get("rel") == "self"), "")
+    return urljoin(base, href)
 
 def load_items_from_child_link(link: str, max_items: int = 1000) -> Tuple[bool, List[Tuple[str, Optional[str]]]]:
     prr = _is_prr(link)
