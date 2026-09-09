@@ -8,7 +8,7 @@ import random
 import sys
 import fnmatch
 from itertools import islice
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 import requests
 import pystac
 
@@ -184,34 +184,39 @@ def _is_creodias(link: str) -> bool:
     return "https://s3.waw4-1.cloudferro.com/" in link
 
 def try_response(url: str, allow_redirects: bool = True, timeout: int = 5) -> requests.Response:
-    """
-    HEAD a URL (optionally retry with UA) and return the Response.
-    """
-    headers = {}
-    # First attempt: HEAD
-    try:
-        resp = requests.head(url, allow_redirects=allow_redirects, timeout=timeout)
-        if resp.status_code == 200:
-            return resp
-    except requests.RequestException:
-        pass # Fall through to retry logic
+    """Try HEAD, then fall back to GET when HEAD fails or is unsupported."""
+    headers = {"User-Agent": DEFAULT_USER_AGENT}
+    head_headers = [{}] if _is_prr(url) else [{}, headers]
+    for attempt_headers in head_headers:
+        try:
+            resp = requests.head(
+                url, headers=attempt_headers,
+                allow_redirects=allow_redirects, timeout=timeout,
+            )
+            if resp.status_code == 200:
+                return resp
+            resp.close()
+        except requests.RequestException:
+            pass
 
-    # Retry logic
-    if _is_prr(url):
-        resp = requests.get(url, headers=headers, allow_redirects=allow_redirects, timeout=timeout)
-    else:
-        headers = {"User-Agent": DEFAULT_USER_AGENT}
-        resp = requests.head(url, headers=headers, allow_redirects=allow_redirects, timeout=timeout)
-            
-    return resp
+    with requests.get(
+        url, headers=headers, allow_redirects=allow_redirects,
+        timeout=timeout, stream=True,
+    ) as resp:
+        return resp
 
 def check_domain(url: str, allowed_patterns: Sequence[str]) -> bool:
-    """Check if a URL's hostname matches allowed wildcard patterns."""
+    """Match approved hosts, optionally restricted to a bucket/path prefix."""
     if not url:
         return False
-    hostname = urlparse(url).hostname or ""
+    parsed = urlparse(url)
+    hostname = parsed.hostname or ""
     for pattern in allowed_patterns:
-        if fnmatch.fnmatch(hostname, pattern):
+        host_pattern, separator, path_prefix = pattern.partition("/")
+        prefix = "/" + path_prefix.rstrip("/")
+        if fnmatch.fnmatch(hostname, host_pattern) and (
+            not separator or parsed.path == prefix or parsed.path.startswith(prefix + "/")
+        ):
             return True
     return False
 
@@ -242,17 +247,20 @@ def _load_zip_zarr(url: str, **kwargs):
     return open_datatree(store, engine="zarr", **kwargs)
 
 def get_resolve_href(feat, asset):
+    """Resolve asset URLs using the item's self link and STAC storage metadata."""
+    href = asset["href"]
+    if urlparse(href).scheme == "s3":
+        schemes = feat.get("properties", {}).get("storage:schemes", {})
+        for ref in asset.get("storage:refs", []):
+            endpoint = schemes.get(ref, {}).get("platform", "")
+            if urlparse(endpoint).scheme in {"http", "https"}:
+                return endpoint.rstrip("/") + "/" + href[len("s3://"):]
+        # S3 URLs do not identify the provider; do not guess a custom endpoint.
+        return href
 
-    # check for cloudferro assets
-    if asset['href'].startswith('s3://'):
-            return 'https://s3.waw4-1.cloudferro.com/' + asset['href']  
-    elif asset['href'][0] != '/':
-            return asset['href']
-    else:
-        root_href = feat['links'][0]['href']
-        scheme = root_href.index('//') + 2
-        root_url = root_href[0: root_href[scheme:].index('/') + scheme]
-        return root_url + asset['href']
+    base = next((link["href"] for link in feat.get("links", [])
+                 if link.get("rel") == "self"), "")
+    return urljoin(base, href)
 
 def load_items_from_child_link(link: str, max_items: int = 1000) -> Tuple[bool, List[Tuple[str, Optional[str]]]]:
     prr = _is_prr(link)
