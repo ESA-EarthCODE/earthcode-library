@@ -184,34 +184,39 @@ def _is_creodias(link: str) -> bool:
     return "https://s3.waw4-1.cloudferro.com/" in link
 
 def try_response(url: str, allow_redirects: bool = True, timeout: int = 5) -> requests.Response:
-    """
-    HEAD a URL (optionally retry with UA) and return the Response.
-    """
-    headers = {}
-    # First attempt: HEAD
-    try:
-        resp = requests.head(url, allow_redirects=allow_redirects, timeout=timeout)
-        if resp.status_code == 200:
-            return resp
-    except requests.RequestException:
-        pass # Fall through to retry logic
+    """Try HEAD, then fall back to GET when HEAD fails or is unsupported."""
+    headers = {"User-Agent": DEFAULT_USER_AGENT}
+    head_headers = [{}] if _is_prr(url) else [{}, headers]
+    for attempt_headers in head_headers:
+        try:
+            resp = requests.head(
+                url, headers=attempt_headers,
+                allow_redirects=allow_redirects, timeout=timeout,
+            )
+            if resp.status_code == 200:
+                return resp
+            resp.close()
+        except requests.RequestException:
+            pass
 
-    # Retry logic
-    if _is_prr(url):
-        resp = requests.get(url, headers=headers, allow_redirects=allow_redirects, timeout=timeout)
-    else:
-        headers = {"User-Agent": DEFAULT_USER_AGENT}
-        resp = requests.head(url, headers=headers, allow_redirects=allow_redirects, timeout=timeout)
-            
-    return resp
+    with requests.get(
+        url, headers=headers, allow_redirects=allow_redirects,
+        timeout=timeout, stream=True,
+    ) as resp:
+        return resp
 
 def check_domain(url: str, allowed_patterns: Sequence[str]) -> bool:
-    """Check if a URL's hostname matches allowed wildcard patterns."""
+    """Match approved hosts, optionally restricted to a bucket/path prefix."""
     if not url:
         return False
-    hostname = urlparse(url).hostname or ""
+    parsed = urlparse(url)
+    hostname = parsed.hostname or ""
     for pattern in allowed_patterns:
-        if fnmatch.fnmatch(hostname, pattern):
+        host_pattern, separator, path_prefix = pattern.partition("/")
+        prefix = "/" + path_prefix.rstrip("/")
+        if fnmatch.fnmatch(hostname, host_pattern) and (
+            not separator or parsed.path == prefix or parsed.path.startswith(prefix + "/")
+        ):
             return True
     return False
 
