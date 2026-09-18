@@ -169,7 +169,7 @@ def test_analyse_ai4ais_larsen_c_ice_shelf_cube_product():
         child_href=target_product_location,
         has_doc=False,
         has_workflow=False,
-        has_doi=False,
+        has_doi=True,
         via_response_ok=False,
         child_response_ok=True,
         via_domain_ok=True,
@@ -207,7 +207,7 @@ def test_analyse_bedrock_topography_antarctica_bedmachine_product():
     expected_result = ProductAuditResult(
         product_id="bedrock-topography-antarctica-bedmachine",
         via_href="https://nsidc.org/data/nsidc-0756/versions/3",
-        child_href="https://s3.waw4-1.cloudferro.com/EarthCODE/Catalogs/4DANTARCTICA/bedrock-topography-antarctica-bedmachine/catalog.json",
+        child_href="https://esa-earthcode.github.io/open-science-catalog-metadata/products/bedrock-topography-antarctica-bedmachine/collection.json",
         has_doc=True,
         has_workflow=False,
         has_doi=True,
@@ -218,17 +218,18 @@ def test_analyse_bedrock_topography_antarctica_bedmachine_product():
         has_visualisation=False,
         child_domain_ok=True,
         asset_audit={
-            "child_link": "https://s3.waw4-1.cloudferro.com/EarthCODE/Catalogs/4DANTARCTICA/bedrock-topography-antarctica-bedmachine/catalog.json",
+            "child_link": "https://esa-earthcode.github.io/open-science-catalog-metadata/products/bedrock-topography-antarctica-bedmachine/collection.json",
             "is_prr": False,
             "checked": [
-                {
-                    "href": "https://s3.waw4-1.cloudferro.com/EarthCODE/OSCAssets/4DANTARCTICA/MEaSUREs_BedMachine_Antarctica_V003/BedMachineAntarctica-v3.nc",
-                    "type": "application/x-netcdf",
-                },
                 {
                     "href": "https://s3.waw4-1.cloudferro.com/EarthCODE/OSCAssets/polar_cube_datasets/bedrock_topography/NSIDC-0756_BedMachineAntarctica_19700101-20191001_V04.1.zarr/",
                     "type": "application/vnd+zarr",
                 },
+                {
+                    "href": "https://s3.waw4-1.cloudferro.com/EarthCODE/OSCAssets/4DANTARCTICA/MEaSUREs_BedMachine_Antarctica_V003/BedMachineAntarctica-v3.nc",
+                    "type": "application/x-netcdf",
+                },
+
             ],
             "success_flags": [True, True],
             "success_rate": 1.0,
@@ -237,7 +238,7 @@ def test_analyse_bedrock_topography_antarctica_bedmachine_product():
     )
 
     result = analyse_product(target_product, timeout=15, seed=123)
-
+    
     assert result == expected_result
 
 
