@@ -3,7 +3,7 @@ from earthcode.fairtool import analyse_product, ProductAuditResult, generate_exa
 
 
 def test_analyse_product():
-    target_product_location = "https://app-reverse-proxy.osc.earthcode.eox.at/open-science-catalog-metadata/products/waposal-waves/collection.json"
+    target_product_location = "https://esa-earthcode.github.io/open-science-catalog-metadata/products/waposal-waves/collection.json"
     target_product = pystac.Collection.from_file(target_product_location)
 
     expected_result = ProductAuditResult(

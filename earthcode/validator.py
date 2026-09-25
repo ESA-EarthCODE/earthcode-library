@@ -5,6 +5,7 @@ from importlib import resources
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 import pystac
+from joblib import Parallel, delayed
 from jsonschema import validate, RefResolver
 
 # Try importing PIL for image validation
@@ -583,7 +584,14 @@ def validateOSCEntry(data: dict, catalog_root: Path) -> List[str]:
 
     return errors
 
-def validate_catalog(root_path):
+
+def _validate_file(path, root):
+    with open(path, 'r', encoding='utf-8') as f:
+        stac_object = json.load(f)
+    return path, validateOSCEntry(stac_object, root)
+
+
+def validate_catalog(root_path, n_jobs=-1):
     root = Path(root_path).resolve()
     if not root.exists():
         print(f"Error: Path {root} does not exist.")
@@ -591,16 +599,16 @@ def validate_catalog(root_path):
     errors = []
     error_files = []
 
-    # Recursive walk
-    for current_dir, _, files in os.walk(root):
-        for file in files:
-            if file.endswith(".json"):
-                full_path = Path(current_dir) / file
-                with open(full_path, 'r', encoding='utf-8') as f:
-                    stac_object = json.load(f)
-                file_errors = validateOSCEntry(stac_object, root)
-                if file_errors:
-                    errors.append(file_errors)
-                    error_files.append(full_path)
+    results = Parallel(n_jobs=n_jobs, batch_size=1)(
+        delayed(_validate_file)(Path(current_dir) / file, root)
+        for current_dir, _, files in os.walk(root)
+        for file in files
+        if file.endswith(".json")
+    )
+    
+    for full_path, file_errors in results:
+        if file_errors:
+            errors.append(file_errors)
+            error_files.append(full_path)
     
     return errors, error_files

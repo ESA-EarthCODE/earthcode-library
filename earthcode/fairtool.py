@@ -11,6 +11,7 @@ from itertools import islice
 from urllib.parse import urljoin, urlparse
 import requests
 import pystac
+from joblib import Parallel, delayed
 
 from dataclasses import dataclass, field
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple, TypeVar, Union, Any
@@ -733,3 +734,33 @@ def add_fairtool_results_to_product(product_collection_path):
             product[k] = v
     
     return product
+
+
+def _score_and_save_product(product_href, products_dir, timeout, seed):
+    target_product = pystac.Collection.from_file(product_href)
+    file_dir = Path(products_dir) / target_product.id / "collection.json"
+    with open(file_dir, "r", encoding="utf-8") as f:
+        product_collection = json.load(f)
+
+    result = analyse_product(target_product, timeout=timeout, seed=seed)
+    product_collection.update(product_audit_to_fair_dict(result))
+
+    with open(file_dir, "w", encoding="utf-8") as f:
+        json.dump(product_collection, f, ensure_ascii=False, indent=2)
+    return file_dir
+
+
+def score_catalog(
+    catalog_path="https://esa-earthcode.github.io/open-science-catalog-metadata/products/catalog.json",
+    products_dir="../open-science-catalog-metadata/products",
+    timeout=15,
+    seed=123,
+    n_jobs=-1,
+):
+    product_dir = pystac.Catalog.from_file(catalog_path)
+    results = Parallel(n_jobs=n_jobs, return_as="generator_unordered")(
+        delayed(_score_and_save_product)(link.get_absolute_href(), products_dir, timeout, seed)
+        for link in product_dir.get_child_links()
+    )
+    for file_dir in results:
+        print(file_dir, flush=True)
