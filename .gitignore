@@ -20,3 +20,4 @@ earthcode/generators/project_generator.py
 guide/workflow.yaml
 guide/experiment.yaml
 docs/examples/downloaded_data/
+*.ipynb_checkpoints/
