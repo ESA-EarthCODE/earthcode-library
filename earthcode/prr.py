@@ -6,7 +6,6 @@ from earthcode.static import create_product_collection, create_project_collectio
 
 
 def osc_project_from_prr(
-    """"Extract as much data as possible from a PRR collection and return an OSC project."""
     prr_collection,  
     project_id,
     project_status,
@@ -15,6 +14,7 @@ def osc_project_from_prr(
     project_start_datetime,
     project_end_datetime,
     project_bbox):
+    """"Extract as much data as possible from a PRR collection and return an OSC project."""
 
     themes = [
         concept["id"]
