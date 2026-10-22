@@ -148,9 +148,9 @@ def _apply_project_contacts(
     consortium_contacts = []
     for name, email in consortium_members:
         if email and len(email) > 0:
-            consortium_contacts.append(_create_contact(name, ["consoritum_member"], [email]))
+            consortium_contacts.append(_create_contact(name, ["consortium_member"], [email]))
         else:
-            consortium_contacts.append(_create_contact(name, ["consoritum_member"], None))
+            consortium_contacts.append(_create_contact(name, ["consortium_member"], None))
     collection.extra_fields["contacts"] = [to_contact] + consortium_contacts
 
 
