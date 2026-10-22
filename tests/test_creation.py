@@ -89,7 +89,7 @@ expected_project =  {
     {
       "name": "Magellium",
       "roles": [
-        "consoritum_member"
+        "consortium_member"
       ],
       "emails": [
         {
